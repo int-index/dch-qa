@@ -10,6 +10,8 @@ executable dch-qa
     QaSession
     FromYAML
     ToHTML
+    ResolvePeople
+    LensUtil
   build-depends:
     base >=4.10 && <4.11,
     containers,
@@ -22,6 +24,7 @@ executable dch-qa
     system-filepath,
     exceptions,
     mmark,
+    lens,
     turtle
   hs-source-dirs:
     src
@@ -35,6 +38,7 @@ executable dch-qa
     FlexibleInstances,
     FlexibleContexts,
     ViewPatterns,
-    TypeApplications
+    TypeApplications,
+    TypeFamilies
   ghc-options:
     -Wall -O2

@@ -11,6 +11,7 @@ import Turtle
 import FromYAML
 import ToHTML
 import QaSession
+import ResolvePeople
 
 newtype PeopleFile = PeopleFile { peopleFile :: FilePath }
 newtype InputDir = InputDir { inputDir :: FilePath }
@@ -59,15 +60,16 @@ readBSFile = liftIO . BS.readFile . FS.encodeString
 processQaSession :: People -> FilePath -> Shell Line
 processQaSession people inputFilePath = do
   inputBS <- readBSFile inputFilePath
-  let qaSessionE = qaSessionFromYAML inputBS
-  qaSession <- case qaSessionE of
-    Right a -> return a
-    Left exc -> die $ format
+  qaSession <- either processingError return $ qaSessionFromYAML inputBS
+  qaSession' <- either processingError return $ resolvePeople people qaSession
+  let outputT = qaSessionToHTML qaSession'
+  select $ textToLines outputT
+  where
+    processingError :: Exception e => e -> Shell a
+    processingError exc = die $ format
       ("An error occured while processing "%fp%":\n"%s)
       inputFilePath
       (Data.Text.pack (displayException exc))
-  let outputT = qaSessionToHTML people qaSession
-  select $ textToLines outputT
 
 processPeople :: FilePath -> Shell People
 processPeople peopleFilePath = do

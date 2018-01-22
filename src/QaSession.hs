@@ -1,10 +1,16 @@
-{-# OPTIONS -fno-warn-orphans #-} -- TODO: remove this
+{-# LANGUAGE TemplateHaskell #-}
 
 module QaSession
   ( Title(..),
     Message(..),
+    msgAuthorL,
+    msgContentL,
     Conversation(..),
+    conversationMessagesL,
     QaSession(..),
+    qassTitleL,
+    qassDateL,
+    qassConversationL,
     Role(..),
     Name(..),
     Alias(..),
@@ -13,30 +19,35 @@ module QaSession
     People
   ) where
 
+import Control.Lens
 import Data.Text
 import Data.Time
 import Data.List.NonEmpty
 import Data.Map
 import Text.MMark
 
-data Message =
+import LensUtil
+
+data Message person =
   Message
-    { msgAuthor :: !Nickname,
+    { msgAuthor :: !person,
       msgContent :: !MMark
     }
   deriving (Show)
 
-newtype Conversation = Conversation (NonEmpty Message)
+newtype Conversation person =
+  Conversation { conversationMessages :: NonEmpty (Message person) }
   deriving (Show)
 
-newtype Title = Title Text
+newtype Title =
+  Title { titleText :: Text }
   deriving (Show)
 
-data QaSession =
+data QaSession person =
   QaSession
     { qassTitle :: !Title,
       qassDate :: !Day,
-      qassConversation :: !Conversation
+      qassConversation :: !(Conversation person)
     }
   deriving (Show)
 
@@ -62,3 +73,7 @@ data Person =
   deriving (Show)
 
 type People = Map Nickname Person
+
+makeLensesWith postfixLFields ''Message
+makeLensesWith postfixLFields ''Conversation
+makeLensesWith postfixLFields ''QaSession

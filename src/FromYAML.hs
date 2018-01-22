@@ -12,7 +12,7 @@ import Data.HashMap.Lazy as HashMap
 import Text.MMark as MMark
 import QaSession
 
-qaSessionFromYAML :: ByteString -> Either ParseException QaSession
+qaSessionFromYAML :: ByteString -> Either ParseException (QaSession Nickname)
 qaSessionFromYAML bs = getJ <$> decodeEither' bs
 
 getJs :: [J a] -> [a]
@@ -45,7 +45,7 @@ instance FromJSON (J Day) where
         "%Y-%m-%d" -- ISO-8601
         (Data.Text.unpack t)
 
-instance FromJSON (J QaSession) where
+instance p ~ Nickname => FromJSON (J (QaSession p)) where
   parseJSON =
     withObject "Q/A Session" $ \j -> do
       J qassTitle <- j .: "title"
@@ -53,14 +53,14 @@ instance FromJSON (J QaSession) where
       J qassConversation <- j .: "conversation"
       return $ J QaSession{..}
 
-instance FromJSON (J Conversation) where
+instance p ~ Nickname => FromJSON (J (Conversation p)) where
   parseJSON =
     withArray "Conversation" $ \j -> do
       case nonEmpty (Foldable.toList j) of
         Nothing -> fail "empty"
         Just js -> J . Conversation . getJs1 <$> traverse parseJSON js
 
-instance FromJSON (J Message) where
+instance p ~ Nickname => FromJSON (J (Message p)) where
   parseJSON =
     withObject "Message" $ \j ->
       case HashMap.toList j of

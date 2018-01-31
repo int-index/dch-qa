@@ -35,8 +35,8 @@ hConversation Conversation{..} =
       let Alias alias = pAlias
       p_ [class_ "qa-author"] $ hAuthorLink pLink $ do
         F.for_ pPic $ \(PicUrl link) ->
-          img_ [src_ link]
-        span_ (toHtml alias)
+          img_ [class_ "qa-userpic", src_ link]
+        span_ [class_ "qa-username"] (toHtml alias)
       div_ [class_ "qa-content"] (MMark.render msgContent)
 
 hAuthorLink :: Maybe Link -> Html () -> Html ()

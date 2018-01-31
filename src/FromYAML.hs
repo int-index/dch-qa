@@ -25,13 +25,18 @@ getJs1 :: NonEmpty (J a) -> NonEmpty a
 getJs1 = coerce
 
 peopleFromYAML :: ByteString -> Either ParseException People
-peopleFromYAML bs = buildPeople . getJs <$> decodeEither' bs
+peopleFromYAML bs = do
+  personList <- getJs <$> decodeEither' bs
+  case buildPeople personList of
+    Just a -> return a
+    Nothing -> fail "Duplicate nicknames"
   where
-    buildPeople :: [Person] -> People
-    buildPeople persons = Map.fromList $ do
-      person <- persons
-      nick <- pNicks person
-      [(nick, person)]
+    buildPeople :: [Person] -> Maybe People
+    buildPeople persons =
+      sequenceA . Map.fromListWith (\_ _ -> Nothing) $ do
+        person <- persons
+        nick <- pNicks person
+        [(nick, Just person)]
 
 newtype J a = J { getJ :: a }
 

@@ -18,6 +18,9 @@ qaSessionFromYAML bs = getJ <$> decodeEither' bs
 getJs :: [J a] -> [a]
 getJs = coerce
 
+getJm :: Maybe (J a) -> Maybe a
+getJm = coerce
+
 getJs1 :: NonEmpty (J a) -> NonEmpty a
 getJs1 = coerce
 
@@ -80,6 +83,8 @@ instance FromJSON (J Person) where
       (getJs -> pNicks) <- j .: "nicks"
       J pName <- j .: "name"
       J pAlias <- j .: "alias"
+      pPic <- getJm <$> (j .:? "pic")
+      pLink <- getJm <$> (j .:? "link")
       J pRole <- j .: "role"
       return $ J Person{..}
 
@@ -94,6 +99,14 @@ instance FromJSON (J Name) where
 instance FromJSON (J Alias) where
   parseJSON =
     withText "Alias" $ return . J . Alias
+
+instance FromJSON (J Pic) where
+  parseJSON =
+    withText "Pic" $ return . J . PicUrl
+
+instance FromJSON (J Link) where
+  parseJSON =
+    withText "Link" $ return . J . Link
 
 instance FromJSON (J Role) where
   parseJSON =

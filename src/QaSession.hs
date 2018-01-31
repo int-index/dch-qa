@@ -14,6 +14,8 @@ module QaSession
     Role(..),
     Name(..),
     Alias(..),
+    Pic(..),
+    Link(..),
     Nickname(..),
     Person(..),
     People
@@ -63,11 +65,19 @@ newtype Name = Name Text
 newtype Alias = Alias Text
   deriving (Eq, Ord, Show)
 
+newtype Pic = PicUrl Text
+  deriving (Eq, Ord, Show)
+
+newtype Link = Link Text
+  deriving (Eq, Ord, Show)
+
 data Person =
   Person
     { pNicks :: ![Nickname],
       pName :: !Name,
       pAlias :: !Alias,
+      pPic :: !(Maybe Pic),
+      pLink :: !(Maybe Link),
       pRole :: !Role
     }
   deriving (Show)

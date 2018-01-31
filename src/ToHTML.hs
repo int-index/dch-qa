@@ -1,7 +1,6 @@
 module ToHTML where
 
 import Data.Foldable as F (for_)
-import Data.Monoid
 import Data.Text
 import Data.Text.Lazy (toStrict)
 import Data.Time
@@ -26,8 +25,13 @@ hHeader Title{..} day = span_ [class_ "qa-header"] $ do
 hConversation :: Conversation Person -> Html ()
 hConversation Conversation{..} =
   F.for_ conversationMessages $ \Message{..} -> do
-    let Person{..} = msgAuthor
-    div_ [class_ ("qa-message " <> roleClass pRole)] $ do
+    let
+      Person{..} = msgAuthor
+      classes =
+          [ "qa-message",
+            roleClass pRole,
+            highlightClass msgHighlight ]
+    div_ [classes_ classes] $ do
       let Alias alias = pAlias
       p_ [class_ "qa-author"] $ hAuthorLink pLink $ do
         F.for_ pPic $ \(PicUrl link) ->
@@ -36,9 +40,16 @@ hConversation Conversation{..} =
       div_ [class_ "qa-content"] (MMark.render msgContent)
 
 hAuthorLink :: Maybe Link -> Html () -> Html ()
-hAuthorLink Nothing = id
-hAuthorLink (Just (Link link)) = a_ [href_ link]
+hAuthorLink = \case
+  Nothing -> id
+  Just (Link link) -> a_ [href_ link]
 
 roleClass :: Role -> Text
-roleClass Client     = "qa-role-client"
-roleClass Consultant = "qa-role-consultant"
+roleClass = \case
+  Client -> "qa-role-client"
+  Consultant -> "qa-role-consultant"
+
+highlightClass :: Highlight -> Text
+highlightClass = \case
+  Highlight True -> "qa-msg-highlight"
+  Highlight False -> "qa-msg-casual"

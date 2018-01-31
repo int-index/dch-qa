@@ -2,9 +2,11 @@
 
 module QaSession
   ( Title(..),
+    Highlight(..),
     Message(..),
     msgAuthorL,
     msgContentL,
+    msgHighlightL,
     Conversation(..),
     conversationMessagesL,
     QaSession(..),
@@ -30,10 +32,14 @@ import Text.MMark
 
 import LensUtil
 
+newtype Highlight = Highlight Bool
+  deriving (Eq, Ord, Show)
+
 data Message person =
   Message
     { msgAuthor :: !person,
-      msgContent :: !MMark
+      msgContent :: !MMark,
+      msgHighlight :: !Highlight
     }
   deriving (Show)
 

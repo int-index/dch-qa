@@ -1,5 +1,6 @@
 module FromYAML (qaSessionFromYAML, peopleFromYAML) where
 
+import Data.Maybe
 import Data.Text
 import Data.Time
 import Data.ByteString
@@ -26,7 +27,7 @@ getJs1 = coerce
 
 peopleFromYAML :: ByteString -> Either ParseException People
 peopleFromYAML bs = do
-  personList <- getJs <$> decodeEither' bs
+  (getJs -> personList) <- decodeEither' bs
   case buildPeople personList of
     Just a -> return a
     Nothing -> fail "Duplicate nicknames"
@@ -73,14 +74,22 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
     withObject "Message" $ \j ->
       case HashMap.toList j of
         [(k, v)] -> do
+          let msgHighlight = Highlight False
           let msgAuthor = Nickname k
-          msgContent <-
-            (\withContent -> withText "Content" withContent v) $ \content ->
-              case MMark.parse "" content of
-                Left e -> fail (parseErrorsPretty content e)
-                Right a -> return a
+          msgContent <- parseContent v
           return $ J Message{..}
-        _ -> fail "malformed message"
+        _ -> do
+          (Highlight . fromMaybe False -> msgHighlight) <-
+            j .:? "highlight"
+          (Nickname -> msgAuthor) <- j .: "author"
+          msgContent <- parseContent =<< (j .: "content")
+          return $ J Message{..}
+    where
+      parseContent =
+        withText "Content" $ \content ->
+          case MMark.parse "" content of
+            Left e -> fail (parseErrorsPretty content e)
+            Right a -> return a
 
 instance FromJSON (J Person) where
   parseJSON =
@@ -88,8 +97,8 @@ instance FromJSON (J Person) where
       (getJs -> pNicks) <- j .: "nicks"
       J pName <- j .: "name"
       J pAlias <- j .: "alias"
-      pPic <- getJm <$> (j .:? "pic")
-      pLink <- getJm <$> (j .:? "link")
+      (getJm -> pPic) <- j .:? "pic"
+      (getJm -> pLink) <- j .:? "link"
       J pRole <- j .: "role"
       return $ J Person{..}
 

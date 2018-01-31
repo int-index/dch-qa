@@ -39,6 +39,7 @@ executable dch-qa
     FlexibleContexts,
     ViewPatterns,
     TypeApplications,
-    TypeFamilies
+    TypeFamilies,
+    LambdaCase
   ghc-options:
     -Wall -O2

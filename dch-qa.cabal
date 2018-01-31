@@ -23,7 +23,7 @@ executable dch-qa
     bytestring,
     system-filepath,
     exceptions,
-    mmark,
+    mmark >=0.0.5,
     lens,
     turtle
   hs-source-dirs:

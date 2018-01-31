@@ -1,12 +1,15 @@
 module Main where
 
 import Control.Applicative as A
+import Data.Foldable (toList)
 import Prelude hiding (FilePath)
 import Filesystem.Path.CurrentOS as FS
 import Data.ByteString as BS
 import Data.Text
 import Control.Exception
 import Turtle
+
+import qualified Control.Foldl as Fold
 
 import FromYAML
 import ToHTML
@@ -48,7 +51,10 @@ main = sh $ do
         Nothing -> (stdout, stdout)
         Just OutputFile{..} -> (output outputFile, Turtle.append outputFile)
   out A.empty -- cleans the file if non-empty
-  yamlPath <- lsif (return . isYamlExt) (inputDir optsInputDir)
+  yamlPaths <-
+    fold (ls (inputDir optsInputDir))
+    (Fold.prefilter isYamlExt Fold.set)
+  yamlPath <- select (toList yamlPaths)
   outAppend (processQaSession people yamlPath)
 
 isYamlExt :: FilePath -> Bool

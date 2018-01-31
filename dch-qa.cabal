@@ -25,7 +25,8 @@ executable dch-qa
     exceptions,
     mmark >=0.0.5,
     lens,
-    turtle
+    turtle,
+    foldl
   hs-source-dirs:
     src
   default-language:

@@ -1,5 +1,6 @@
 module LensUtil where
 
+import BasePrelude
 import Control.Lens
 
 postfixLFields :: LensRules

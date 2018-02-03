@@ -1,7 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module QaSession
-  ( Title(..),
+module Types
+  ( -- * QA session
+    Title(..),
+    Id(..),
     Highlight(..),
     Message(..),
     msgAuthorL,
@@ -10,6 +12,7 @@ module QaSession
     Conversation(..),
     conversationMessagesL,
     QaSession(..),
+    qassIdL,
     qassTitleL,
     qassDateL,
     qassConversationL,
@@ -20,9 +23,13 @@ module QaSession
     Link(..),
     Nickname(..),
     Person(..),
-    People
+    People,
+
+    -- * Misc
+    SiteUrl(..)
   ) where
 
+import BasePrelude
 import Control.Lens
 import Data.Text
 import Data.Time
@@ -51,9 +58,14 @@ newtype Title =
   Title { titleText :: Text }
   deriving (Show)
 
-data QaSession person =
+newtype Id =
+  Id { idText :: Text }
+  deriving (Eq, Ord, Show)
+
+data QaSession id person =
   QaSession
-    { qassTitle :: !Title,
+    { qassId :: !id,
+      qassTitle :: !Title,
       qassDate :: !Day,
       qassConversation :: !(Conversation person)
     }
@@ -71,7 +83,7 @@ newtype Name = Name Text
 newtype Alias = Alias Text
   deriving (Eq, Ord, Show)
 
-newtype Pic = PicUrl Text
+newtype Pic = PicFile Text
   deriving (Eq, Ord, Show)
 
 newtype Link = Link Text
@@ -93,3 +105,6 @@ type People = Map Nickname Person
 makeLensesWith postfixLFields ''Message
 makeLensesWith postfixLFields ''Conversation
 makeLensesWith postfixLFields ''QaSession
+
+newtype SiteUrl = SiteUrl Text
+  deriving Show

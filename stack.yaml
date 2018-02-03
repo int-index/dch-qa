@@ -1,0 +1,8 @@
+resolver: lts-10.3
+
+packages:
+- .
+
+extra-deps:
+- mmark-0.0.5.4
+- megaparsec-6.4.0

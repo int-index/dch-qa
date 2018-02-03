@@ -1,7 +1,7 @@
 module FromYAML (qaSessionFromYAML, peopleFromYAML) where
 
 import Data.Maybe
-import Data.Text
+import Data.Text as Text
 import Data.Time
 import Data.ByteString
 import Data.Yaml
@@ -52,7 +52,7 @@ instance FromJSON (J Day) where
         True -- Accept leading and trailing whitespace
         defaultTimeLocale
         "%Y-%m-%d" -- ISO-8601
-        (Data.Text.unpack t)
+        (Text.unpack t)
 
 instance p ~ Nickname => FromJSON (J (QaSession p)) where
   parseJSON =
@@ -71,25 +71,29 @@ instance p ~ Nickname => FromJSON (J (Conversation p)) where
 
 instance p ~ Nickname => FromJSON (J (Message p)) where
   parseJSON =
-    withObject "Message" $ \j ->
-      case HashMap.toList j of
+    withObject "Message" $ \j -> do
+      (Highlight . fromMaybe False -> msgHighlight) <-
+        j .:? "highlight"
+      case filterSlashEntities j of
         [(k, v)] -> do
-          let msgHighlight = Highlight False
           let msgAuthor = Nickname k
           msgContent <- parseContent v
           return $ J Message{..}
-        _ -> do
-          (Highlight . fromMaybe False -> msgHighlight) <-
-            j .:? "highlight"
-          (Nickname -> msgAuthor) <- j .: "author"
-          msgContent <- parseContent =<< (j .: "content")
-          return $ J Message{..}
+        [] -> fail "no author and content specified for a message"
+        _ -> fail "multiple slash entities encountered"
     where
       parseContent =
         withText "Content" $ \content ->
           case MMark.parse "" content of
             Left e -> fail (parseErrorsPretty content e)
             Right a -> return a
+      filterSlashEntities obj = do
+        (k, v) <- HashMap.toList obj
+        a <-
+          case Text.uncons k of
+            Just ('/', a) -> [a]
+            _ -> []
+        [(a, v)]
 
 instance FromJSON (J Person) where
   parseJSON =

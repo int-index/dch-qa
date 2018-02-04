@@ -30,6 +30,7 @@ executable dch-qa
     text,
     time,
     turtle,
+    uniplate,
     unordered-containers,
     xml,
     xml-conduit,

@@ -3,6 +3,7 @@ module ToFeed where
 import BasePrelude
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BS.L
+import Data.Generics.Uniplate.Data
 import Data.Text
 import Data.Time
 import Data.Reflection
@@ -19,6 +20,8 @@ qaSessionsToFeed :: Given SiteUrl => [QaSession Id Person] -> BS.ByteString
 qaSessionsToFeed =
   BS.L.toStrict .
   XML.renderLBS XML.def .
+  -- see https://validator.w3.org/feed/docs/warning/AvoidNamespacePrefix.html
+  transformBi (\name -> name {XML.nameNamespace = Nothing}) .
   mkDocument .
   Atom.xmlFeed .
   qaFeed

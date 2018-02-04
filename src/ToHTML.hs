@@ -28,22 +28,16 @@ hQaSession QaSession{..} = do
     Web -> details_ [class_ "qa-session", id_ idText] $ do
       summary_ (hHeader qassId qassTitle qassDate)
       hConversation qassConversation
-    Feed -> div_ [id_ idText] $ do
-      h2_ (hHeader qassId qassTitle qassDate)
+    Feed -> div_ [id_ idText] $
       hConversation qassConversation
 
-hHeader
-  :: (Given Target, Given SiteUrl)
-  => Id -> Title -> Day -> Html ()
+hHeader :: Id -> Title -> Day -> Html ()
 hHeader Id{..} Title{..} day = do
   span_ [class_ "qa-header"] $ do
     span_ [class_ "qa-title"] $ do
-      a_ [href_ (relativeLink ("#" <> idText))] (toHtml titleText)
+      a_ [href_ ("#" <> idText)] (toHtml titleText)
     let timeString = formatTime defaultTimeLocale "%Y-%m-%d" day
-        timeHtml   = time_ [class_ "qa-time"] (toHtmlRaw timeString)
-    case given @Target of
-      Web  -> timeHtml
-      Feed -> em_ $ " (" >> timeHtml >> ")"
+    time_ [class_ "qa-time"] (toHtmlRaw timeString)
 
 hConversation
   :: (Given Target, Given SiteUrl)

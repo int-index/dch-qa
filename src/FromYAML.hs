@@ -1,6 +1,6 @@
-module FromYAML (qaSessionFromYAML, peopleFromYAML) where
+module FromYAML (qaSessionFromYaml, peopleFromYaml) where
 
-import Data.Maybe
+import BasePrelude
 import Data.Text as Text
 import Data.Time
 import Data.ByteString
@@ -10,11 +10,17 @@ import Data.Coerce
 import Data.List.NonEmpty
 import Data.Foldable as Foldable
 import Data.HashMap.Lazy as HashMap
+import System.FilePath
 import Text.MMark as MMark
-import QaSession
+import Types
 
-qaSessionFromYAML :: ByteString -> Either ParseException (QaSession Nickname)
-qaSessionFromYAML bs = getJ <$> decodeEither' bs
+qaSessionFromYaml
+  :: FilePath
+  -> ByteString
+  -> Either ParseException (QaSession Id Nickname)
+qaSessionFromYaml fp bs = do
+  session <- getJ <$> decodeEither' bs
+  pure session {qassId = Id (Text.pack (takeBaseName fp))}
 
 getJs :: [J a] -> [a]
 getJs = coerce
@@ -25,8 +31,8 @@ getJm = coerce
 getJs1 :: NonEmpty (J a) -> NonEmpty a
 getJs1 = coerce
 
-peopleFromYAML :: ByteString -> Either ParseException People
-peopleFromYAML bs = do
+peopleFromYaml :: ByteString -> Either ParseException People
+peopleFromYaml bs = do
   (getJs -> personList) <- decodeEither' bs
   case buildPeople personList of
     Just a -> return a
@@ -54,9 +60,10 @@ instance FromJSON (J Day) where
         "%Y-%m-%d" -- ISO-8601
         (Text.unpack t)
 
-instance p ~ Nickname => FromJSON (J (QaSession p)) where
+instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
   parseJSON =
     withObject "Q/A Session" $ \j -> do
+      let qassId = ()
       J qassTitle <- j .: "title"
       J qassDate <- j .: "date"
       J qassConversation <- j .: "conversation"
@@ -120,7 +127,7 @@ instance FromJSON (J Alias) where
 
 instance FromJSON (J Pic) where
   parseJSON =
-    withText "Pic" $ return . J . PicUrl
+    withText "Pic" $ return . J . PicFile
 
 instance FromJSON (J Link) where
   parseJSON =

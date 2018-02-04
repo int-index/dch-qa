@@ -1,7 +1,7 @@
 module ResolvePeople where
 
-import Control.Exception
-import QaSession
+import BasePrelude
+import Types
 
 import qualified Data.Map as Map
 
@@ -14,8 +14,8 @@ instance Exception PersonNotFound where
 
 resolvePeople ::
   People ->
-  QaSession Nickname ->
-  Either PersonNotFound (QaSession Person)
+  QaSession id Nickname ->
+  Either PersonNotFound (QaSession id Person)
 resolvePeople people =
   (qassConversationL . conversationMessagesL . traverse . msgAuthorL)
     (resolvePerson people)

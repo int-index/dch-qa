@@ -51,7 +51,26 @@ hConversation Conversation{..} =
             highlightClass msgHighlight ]
     div_ [classes_ classes] $ do
       hMessageAuthor msgAuthor
-      div_ [class_ "qa-content"] (MMark.render msgContent)
+      div_ [class_ "qa-content"] $
+        F.for_ msgContent $ \ContentPart{..} -> do
+          F.for_ contentPartThumbnail hThumbnail
+          MMark.render contentPartMMark
+
+hThumbnail ::
+  (Given Target, Given SiteUrl) =>
+  Thumbnail ->
+  Html ()
+hThumbnail Thumbnail{..} = do
+  let
+    PicFile picFile = thumbnailPic
+    inDir path = "thumbnails/" <> path
+    sideClass =
+      case thumbnailSide of
+        SideLeft -> "qa-thumbnail-left"
+        SideRight -> "qa-thumbnail-right"
+  img_ [ classes_ ["qa-thumbnail", sideClass],
+         src_ (relativeLink (inDir picFile)),
+         srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
 
 hMessageAuthor
   :: (Given Target, Given SiteUrl)
@@ -71,9 +90,10 @@ hAuthorPic
   :: (Given Target, Given SiteUrl)
   => Pic -> Html ()
 hAuthorPic (PicFile picFile) = do
+  let inDir path = "userpics/" <> path
   img_ [ class_ "qa-userpic",
-         src_ (relativeLink picFile),
-         srcset_ (relativeLink ("2x_" <> picFile) <> " 2x") ]
+         src_ (relativeLink (inDir picFile)),
+         srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
 
 hAuthorLink :: Maybe Link -> Html () -> Html ()
 hAuthorLink = \case

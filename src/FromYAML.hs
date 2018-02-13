@@ -89,11 +89,37 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
         [] -> fail "no author and content specified for a message"
         _ -> fail "multiple slash entities encountered"
     where
-      parseContent =
-        withText "Content" $ \content ->
-          case MMark.parse "" content of
-            Left e -> fail (parseErrorsPretty content e)
-            Right a -> return a
+      parseContent j =
+        parseContentText j <|>
+        parseContentArray j
+      parseContentText j =
+        (\a -> a :| []) <$> parseContentPartText j
+      parseContentArray =
+        withArray "Content" $ \contentParts -> do
+          contentParts' <-
+            case nonEmpty (Foldable.toList contentParts) of
+              Nothing -> fail "empty content parts"
+              Just a -> return a
+          for contentParts' parseContentPart
+      parseContentPart j =
+        parseContentPartText j <|>
+        parseContentPartObject j
+      parseContentPartText =
+        withText "ContentPart" $ \contentText -> do
+          a <- parseMMark contentText
+          return $
+            ContentPart
+              { contentPartThumbnail = Nothing,
+                contentPartMMark = a }
+      parseContentPartObject =
+        withObject "ContentPart" $ \j -> do
+          (getJm -> contentPartThumbnail) <- j .:? "thumbnail"
+          contentPartMMark <- parseMMark =<< (j .: "content")
+          return $ ContentPart{..}
+      parseMMark text =
+        case MMark.parse "" text of
+          Left e -> fail (parseErrorsPretty text e)
+          Right a -> return a
       filterSlashEntities obj = do
         (k, v) <- HashMap.toList obj
         a <-
@@ -101,6 +127,21 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
             Just ('/', a) -> [a]
             _ -> []
         [(a, v)]
+
+instance FromJSON (J Thumbnail) where
+  parseJSON =
+    withObject "Thumbnail" $ \j -> do
+      J thumbnailSide <- j .: "side"
+      J thumbnailPic <- j .: "pic"
+      return $ J Thumbnail{..}
+
+instance FromJSON (J Side) where
+  parseJSON =
+    withText "Side" $ \t ->
+      J <$> case t of
+        "left" -> return SideLeft
+        "right" -> return SideRight
+        _ -> fail "Unknown side"
 
 instance FromJSON (J Person) where
   parseJSON =

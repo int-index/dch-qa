@@ -5,6 +5,9 @@ module Types
     Title(..),
     Id(..),
     Highlight(..),
+    Side(..),
+    Thumbnail(..),
+    ContentPart(..),
     Message(..),
     msgAuthorL,
     msgContentL,
@@ -42,10 +45,27 @@ import LensUtil
 newtype Highlight = Highlight Bool
   deriving (Eq, Ord, Show)
 
+data Side = SideLeft | SideRight
+  deriving (Show)
+
+data Thumbnail =
+  Thumbnail
+    { thumbnailSide :: !Side,
+      thumbnailPic :: !Pic
+    }
+  deriving (Show)
+
+data ContentPart =
+  ContentPart
+    { contentPartThumbnail :: !(Maybe Thumbnail),
+      contentPartMMark :: !MMark
+    }
+  deriving (Show)
+
 data Message person =
   Message
     { msgAuthor :: !person,
-      msgContent :: !MMark,
+      msgContent :: !(NonEmpty ContentPart),
       msgHighlight :: !Highlight
     }
   deriving (Show)

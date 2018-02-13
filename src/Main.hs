@@ -1,6 +1,6 @@
 module Main where
 
-import BasePrelude hiding (FilePath, (%), fold)
+import BasePrelude as P hiding (FilePath, (%), fold)
 import Data.Reflection
 import Control.Applicative as A
 import Filesystem.Path.CurrentOS as FS
@@ -68,7 +68,8 @@ main = sh $ do
             Just OutputFile{..} -> ( output outputFile,
                                      Turtle.append outputFile )
       outHtml A.empty -- cleans the file if non-empty
-      for_ qaSessions $ \qaSession -> do
+      let sortedQaSessions = P.sortOn (Down . qassDate &&& qassId) qaSessions
+      for_ sortedQaSessions $ \qaSession -> do
         let outputT = qaSessionToHtml qaSession
         outAppendHtml (select (textToLines outputT))
     -- Write the feed

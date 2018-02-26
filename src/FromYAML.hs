@@ -133,6 +133,7 @@ instance FromJSON (J Thumbnail) where
     withObject "Thumbnail" $ \j -> do
       J thumbnailSide <- j .: "side"
       J thumbnailPic <- j .: "pic"
+      (getJm -> thumbnailLink) <- j .: "link"
       return $ J Thumbnail{..}
 
 instance FromJSON (J Side) where

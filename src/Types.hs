@@ -51,7 +51,8 @@ data Side = SideLeft | SideRight
 data Thumbnail =
   Thumbnail
     { thumbnailSide :: !Side,
-      thumbnailPic :: !Pic
+      thumbnailPic :: !Pic,
+      thumbnailLink :: !(Maybe Link)
     }
   deriving (Show)
 

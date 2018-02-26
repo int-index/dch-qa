@@ -68,9 +68,12 @@ hThumbnail Thumbnail{..} = do
       case thumbnailSide of
         SideLeft -> "qa-thumbnail-left"
         SideRight -> "qa-thumbnail-right"
-  img_ [ classes_ ["qa-thumbnail", sideClass],
-         src_ (relativeLink (inDir picFile)),
-         srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+  let img = img_ [ classes_ ["qa-thumbnail", sideClass],
+        src_ (relativeLink (inDir picFile)),
+        srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+  case thumbnailLink of
+    Nothing -> img
+    Just (Link url) -> a_ [href_ url] img
 
 hMessageAuthor
   :: (Given Target, Given SiteUrl)

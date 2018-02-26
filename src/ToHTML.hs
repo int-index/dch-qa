@@ -68,7 +68,8 @@ hThumbnail Thumbnail{..} = do
       case thumbnailSide of
         SideLeft -> "qa-thumbnail-left"
         SideRight -> "qa-thumbnail-right"
-  let img = img_ [ classes_ ["qa-thumbnail", sideClass],
+    otherClasses = ["qa-thumbnail-" <> c | Class c <- toList thumbnailClass]
+  let img = img_ [ classes_ ("qa-thumbnail" : sideClass : otherClasses),
         src_ (relativeLink (inDir picFile)),
         srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
   case thumbnailLink of

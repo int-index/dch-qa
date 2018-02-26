@@ -6,6 +6,7 @@ import Data.Time
 import Data.ByteString
 import Data.Yaml
 import Data.Map as Map
+import Data.Set as Set
 import Data.Coerce
 import Data.List.NonEmpty
 import Data.Foldable as Foldable
@@ -31,6 +32,9 @@ getJm = coerce
 getJs1 :: NonEmpty (J a) -> NonEmpty a
 getJs1 = coerce
 
+getJset :: Ord a => Set (J a) -> Set a
+getJset = Set.map getJ
+
 peopleFromYaml :: ByteString -> Either ParseException People
 peopleFromYaml bs = do
   (getJs -> personList) <- decodeEither' bs
@@ -46,6 +50,7 @@ peopleFromYaml bs = do
         [(nick, Just person)]
 
 newtype J a = J { getJ :: a }
+  deriving (Eq, Ord)
 
 instance FromJSON (J Title) where
   parseJSON =
@@ -134,6 +139,9 @@ instance FromJSON (J Thumbnail) where
       J thumbnailSide <- j .: "side"
       J thumbnailPic <- j .: "pic"
       (getJm -> thumbnailLink) <- j .: "link"
+      thumbnailClass <- fmap (fromMaybe mempty) $ optional $
+        fmap getJset (j .: "class") <|>
+        fmap (Set.singleton . getJ) (j .: "class")
       return $ J Thumbnail{..}
 
 instance FromJSON (J Side) where
@@ -143,6 +151,10 @@ instance FromJSON (J Side) where
         "left" -> return SideLeft
         "right" -> return SideRight
         _ -> fail "Unknown side"
+
+instance FromJSON (J Class) where
+  parseJSON =
+    withText "Class" $ return . J . Class
 
 instance FromJSON (J Person) where
   parseJSON =

@@ -6,6 +6,7 @@ module Types
     Id(..),
     Highlight(..),
     Side(..),
+    Class(..),
     Thumbnail(..),
     ContentPart(..),
     Message(..),
@@ -38,6 +39,7 @@ import Data.Text
 import Data.Time
 import Data.List.NonEmpty
 import Data.Map
+import Data.Set
 import Text.MMark
 
 import LensUtil
@@ -48,11 +50,16 @@ newtype Highlight = Highlight Bool
 data Side = SideLeft | SideRight
   deriving (Show)
 
+newtype Class =
+  Class { className :: Text }
+  deriving (Eq, Ord, Show)
+
 data Thumbnail =
   Thumbnail
     { thumbnailSide :: !Side,
       thumbnailPic :: !Pic,
-      thumbnailLink :: !(Maybe Link)
+      thumbnailLink :: !(Maybe Link),
+      thumbnailClass :: !(Set Class)
     }
   deriving (Show)
 

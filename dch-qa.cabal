@@ -13,6 +13,7 @@ executable dch-qa
     ToFeed
     ResolvePeople
     LensUtil
+    MarkdownUtil
   build-depends:
     base >=4.10 && <4.11,
     base-prelude,

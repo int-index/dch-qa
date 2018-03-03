@@ -11,6 +11,7 @@ import Lucid
 import Lucid.Base
 import qualified Text.MMark as MMark (render, useExtensions)
 import Text.MMark.Extension.Skylighting as MMark (skylighting)
+import MarkdownUtil (nowrapExt)
 
 data Target = Web | Feed
   deriving (Eq, Show)
@@ -60,7 +61,8 @@ hConversation Conversation{..} =
         F.for_ msgContent $ \ContentPart{..} -> do
           F.for_ contentPartThumbnail hThumbnail
           MMark.render $
-            MMark.useExtensions [MMark.skylighting] contentPartMMark
+            MMark.useExtensions [MMark.skylighting, nowrapExt] $
+              contentPartMMark
 
 hThumbnail ::
   (Given Target, Given SiteUrl) =>

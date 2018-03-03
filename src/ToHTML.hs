@@ -25,8 +25,12 @@ hQaSession
   => QaSession Id Person -> Html ()
 hQaSession QaSession{..} = do
   let Id{..} = qassId
+      Featured{..} = qassFeatured
+      classes =
+        [ "qa-session" ] <>
+        [ "qa-session-featured" | featured ]
   case given @Target of
-    Web -> details_ [class_ "qa-session", id_ idText] $ do
+    Web -> details_ [classes_ classes, id_ idText] $ do
       summary_ (hHeader qassId qassTitle qassDate)
       hConversation qassConversation
     Feed -> div_ [id_ idText] $

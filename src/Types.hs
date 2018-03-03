@@ -4,6 +4,7 @@ module Types
   ( -- * QA session
     Title(..),
     Id(..),
+    Featured(..),
     Highlight(..),
     Side(..),
     Class(..),
@@ -20,6 +21,7 @@ module Types
     qassIdL,
     qassTitleL,
     qassDateL,
+    qassFeaturedL,
     qassConversationL,
     Role(..),
     Name(..),
@@ -96,11 +98,16 @@ newtype Id =
   Id { idText :: Text }
   deriving (Eq, Ord, Show)
 
+newtype Featured =
+  Featured { featured :: Bool }
+  deriving (Eq, Show)
+
 data QaSession id person =
   QaSession
     { qassId :: !id,
       qassTitle :: !Title,
       qassDate :: !Day,
+      qassFeatured :: !Featured,
       qassConversation :: !(Conversation person)
     }
   deriving (Show)

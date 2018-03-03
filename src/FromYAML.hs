@@ -56,6 +56,10 @@ instance FromJSON (J Title) where
   parseJSON =
     withText "Title" (return . J . Title)
 
+instance FromJSON (J Featured) where
+  parseJSON =
+    withBool "Featured" (return . J . Featured)
+
 instance FromJSON (J Day) where
   parseJSON =
     withText "Date" $ \t ->
@@ -71,6 +75,7 @@ instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
       let qassId = ()
       J qassTitle <- j .: "title"
       J qassDate <- j .: "date"
+      J qassFeatured <- fromMaybe (J (Featured False)) <$> j .:? "featured"
       J qassConversation <- j .: "conversation"
       return $ J QaSession{..}
 

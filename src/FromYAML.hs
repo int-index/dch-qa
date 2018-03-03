@@ -138,7 +138,7 @@ instance FromJSON (J Thumbnail) where
     withObject "Thumbnail" $ \j -> do
       J thumbnailSide <- j .: "side"
       J thumbnailPic <- j .: "pic"
-      (getJm -> thumbnailLink) <- j .: "link"
+      (getJm -> thumbnailLink) <- j .:? "link"
       thumbnailClass <- fmap (fromMaybe mempty) $ optional $
         fmap getJset (j .: "class") <|>
         fmap (Set.singleton . getJ) (j .: "class")

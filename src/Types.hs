@@ -7,6 +7,7 @@ module Types
     Highlight(..),
     Side(..),
     Class(..),
+    Caption(..),
     Thumbnail(..),
     ContentPart(..),
     Message(..),
@@ -54,12 +55,17 @@ newtype Class =
   Class { className :: Text }
   deriving (Eq, Ord, Show)
 
+newtype Caption =
+  Caption { captionText :: Text }
+  deriving (Eq, Ord, Show)
+
 data Thumbnail =
   Thumbnail
     { thumbnailSide :: !Side,
       thumbnailPic :: !Pic,
       thumbnailLink :: !(Maybe Link),
-      thumbnailClass :: !(Set Class)
+      thumbnailClass :: !(Set Class),
+      thumbnailCaption :: !(Maybe Caption)
     }
   deriving (Show)
 

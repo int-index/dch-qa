@@ -69,12 +69,15 @@ hThumbnail Thumbnail{..} = do
         SideLeft -> "qa-thumbnail-left"
         SideRight -> "qa-thumbnail-right"
     otherClasses = ["qa-thumbnail-" <> c | Class c <- toList thumbnailClass]
-  let img = img_ [ classes_ ("qa-thumbnail" : sideClass : otherClasses),
-        src_ (relativeLink (inDir picFile)),
-        srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
-  case thumbnailLink of
-    Nothing -> img
-    Just (Link url) -> a_ [href_ url] img
+  div_ [classes_ ("qa-thumbnail" : sideClass : otherClasses)] $ do
+    let img = img_ [
+          src_ (relativeLink (inDir picFile)),
+          srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+    case thumbnailLink of
+      Nothing -> img
+      Just (Link url) -> a_ [href_ url] img
+    F.for_ thumbnailCaption $ \(Caption caption) ->
+      p_ [class_ "qa-thumbnail-caption"] (toHtml caption)
 
 hMessageAuthor
   :: (Given Target, Given SiteUrl)

@@ -142,6 +142,7 @@ instance FromJSON (J Thumbnail) where
       thumbnailClass <- fmap (fromMaybe mempty) $ optional $
         fmap getJset (j .: "class") <|>
         fmap (Set.singleton . getJ) (j .: "class")
+      (getJm -> thumbnailCaption) <- j .:? "caption"
       return $ J Thumbnail{..}
 
 instance FromJSON (J Side) where
@@ -155,6 +156,10 @@ instance FromJSON (J Side) where
 instance FromJSON (J Class) where
   parseJSON =
     withText "Class" $ return . J . Class
+
+instance FromJSON (J Caption) where
+  parseJSON =
+    withText "Caption" $ return . J . Caption
 
 instance FromJSON (J Person) where
   parseJSON =

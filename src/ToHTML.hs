@@ -9,7 +9,8 @@ import Data.Time
 import Types
 import Lucid
 import Lucid.Base
-import qualified Text.MMark as MMark (render)
+import qualified Text.MMark as MMark (render, useExtensions)
+import Text.MMark.Extension.Skylighting as MMark (skylighting)
 
 data Target = Web | Feed
   deriving (Eq, Show)
@@ -54,7 +55,8 @@ hConversation Conversation{..} =
       div_ [class_ "qa-content"] $
         F.for_ msgContent $ \ContentPart{..} -> do
           F.for_ contentPartThumbnail hThumbnail
-          MMark.render contentPartMMark
+          MMark.render $
+            MMark.useExtensions [MMark.skylighting] contentPartMMark
 
 hThumbnail ::
   (Given Target, Given SiteUrl) =>

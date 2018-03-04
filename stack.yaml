@@ -9,3 +9,7 @@ extra-deps:
 - modern-uri-0.2.1.0
 - megaparsec-6.4.0
 - named-0.1.0.0
+- "https://github.com/neongreen/skylighting/releases/download/char-fixed/skylighting-core-0.7.0.1.tar.gz"
+- "https://github.com/neongreen/skylighting/releases/download/char-fixed/skylighting-0.7.0.1.tar.gz"
+
+allow-newer: true

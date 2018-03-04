@@ -1,28 +1,35 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module MarkdownUtil where
 
 import BasePrelude
+import Data.List.NonEmpty
 import Data.Text as Text
 import Text.MMark as MMark
 import Text.MMark.Extension as MMark
 import Text.MMark.Extension.Skylighting as MMark
 import Lucid
+import Text.URI
+import Text.URI.QQ (uri)
 
 ----------------------------------------------------------------------------
 -- Main methods
 ----------------------------------------------------------------------------
 
--- | Parse Markdown, and 'fail' if there have been any errors.
-parseMMark :: Monad m => Text -> m MMark
+-- | Parse Markdown, and 'error' out if there has been an error. We don't
+-- want to use 'fail' or 'throw' because then (e.g. in Aeson) we sometimes
+-- try other alternatives when parsing fails, while we really shouldn't.
+parseMMark :: Text -> MMark
 parseMMark text =
   case MMark.parse "" text of
-    Left e -> fail (MMark.parseErrorsPretty text e)
-    Right a -> return a
+    Left e -> error (MMark.parseErrorsPretty text e)
+    Right a -> a
 
 -- | Render a block of Markdown with our preferred extensions.
 renderMMarkBlock :: MMark -> Html ()
 renderMMarkBlock =
   MMark.render .
-  MMark.useExtensions [MMark.skylighting, nowrapExt]
+  MMark.useExtensions [MMark.skylighting, nowrapExt, shortcutLinksExt]
 
 -- | Render inline Markdown with our preferred extensions.
 --
@@ -31,7 +38,7 @@ renderMMarkBlock =
 renderMMarkInline :: MMark -> Html ()
 renderMMarkInline =
   MMark.render .
-  MMark.useExtensions [nowrapExt, inlineExt]
+  MMark.useExtensions [nowrapExt, inlineExt, shortcutLinksExt]
 
 ----------------------------------------------------------------------------
 -- Extensions that we use
@@ -62,3 +69,24 @@ inlineExt :: MMark.Extension
 inlineExt = MMark.blockTrans $ \case
   MMark.Paragraph inlines -> MMark.Naked inlines
   other -> other
+
+-- | Allow some links to be specified in shortened form.
+--
+-- * To link to a Hackage package, write @[lens](hackage)@.
+--    The result will be monospaced.
+shortcutLinksExt :: MMark.Extension
+shortcutLinksExt = MMark.inlineTrans $ \case
+  MMark.Link content link title
+    | link == [uri|hackage|]
+    , Just pkg <- getPackage content
+    , Just link' <- hackageLink pkg
+        -> MMark.Link (MMark.CodeSpan pkg :| []) link' title
+  other -> other
+  where
+    getPackage = \case
+      (MMark.Plain pkg :| [])    -> Just pkg
+      (MMark.CodeSpan pkg :| []) -> Just pkg
+      _                          -> Nothing
+    hackageLink pkg = do
+      pkgUri <- mkURI pkg
+      pkgUri `relativeTo` [uri|https://hackage.haskell.org/package/|]

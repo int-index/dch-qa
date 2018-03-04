@@ -70,6 +70,7 @@ main = sh $ do
       outHtml A.empty -- cleans the file if non-empty
       let sortedQaSessions = P.sortOn (Down . qassDate &&& qassId) qaSessions
       for_ sortedQaSessions $ \qaSession -> do
+        err =<< select (textToLines ("Processing " <> idText (qassId qaSession)))
         let outputT = qaSessionToHtml qaSession
         outAppendHtml (select (textToLines outputT))
     -- Write the feed

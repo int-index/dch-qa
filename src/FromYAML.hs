@@ -54,7 +54,7 @@ newtype J a = J { getJ :: a }
 
 instance FromJSON (J Title) where
   parseJSON =
-    withText "Title" $ fmap (J . Title) . parseMMark
+    withText "Title" $ pure . J . Title . parseMMark
 
 instance FromJSON (J Featured) where
   parseJSON =
@@ -116,15 +116,13 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
         parseContentPartObject j
       parseContentPartText =
         withText "ContentPart" $ \contentText -> do
-          a <- parseMMark contentText
-          return $
-            ContentPart
+          pure ContentPart
               { contentPartThumbnail = Nothing,
-                contentPartMMark = a }
+                contentPartMMark = parseMMark contentText }
       parseContentPartObject =
         withObject "ContentPart" $ \j -> do
           (getJm -> contentPartThumbnail) <- j .:? "thumbnail"
-          contentPartMMark <- parseMMark =<< (j .: "content")
+          contentPartMMark <- parseMMark <$> (j .: "content")
           return $ ContentPart{..}
       filterSlashEntities obj = do
         (k, v) <- HashMap.toList obj
@@ -160,7 +158,7 @@ instance FromJSON (J Class) where
 
 instance FromJSON (J Caption) where
   parseJSON =
-    withText "Caption" $ fmap (J . Caption) . parseMMark
+    withText "Caption" $ pure . J . Caption . parseMMark
 
 instance FromJSON (J Person) where
   parseJSON =

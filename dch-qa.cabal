@@ -27,6 +27,7 @@ executable dch-qa
     lucid,
     mmark >=0.0.5,
     mmark-ext >=0.2,
+    modern-uri >=0.2,
     reflection,
     system-filepath,
     text,

@@ -1,8 +1,11 @@
 module Main where
 
 import BasePrelude as P hiding (FilePath, (%), fold)
+import Data.List.NonEmpty as NonEmpty
 import Data.Reflection
 import Control.Applicative as A
+import Control.Lens as L
+import Data.Time
 import Filesystem.Path.CurrentOS as FS
 import Data.ByteString as BS
 import Data.Text as Text
@@ -57,7 +60,7 @@ main = sh $ do
     yamlPaths <-
       fold (ls (inputDir optsInputDir))
       (Fold.prefilter isYamlExt Fold.set)
-    qaSessions <- liftIO $ traverse (readQaSession people) (toList yamlPaths)
+    qaSessions <- liftIO $ traverse (readQaSession people) (P.toList yamlPaths)
     -- Write HTML
     give @Target Web $ do
       let
@@ -68,11 +71,17 @@ main = sh $ do
             Just OutputFile{..} -> ( output outputFile,
                                      Turtle.append outputFile )
       outHtml A.empty -- cleans the file if non-empty
-      let sortedQaSessions = P.sortOn (Down . qassDate &&& qassId) qaSessions
-      for_ sortedQaSessions $ \qaSession -> do
-        err =<< select (textToLines ("Processing " <> idText (qassId qaSession)))
-        let outputT = qaSessionToHtml qaSession
-        outAppendHtml (select (textToLines outputT))
+      let qassYear = L.view _1 . toGregorian . qassDate
+          groupedQaSessions =
+            NonEmpty.groupWith qassYear $
+            P.sortOn (Down . qassDate &&& qassId) qaSessions
+      for_ groupedQaSessions $ \qaForYear -> do
+        let yearT = qaYearHeaderToHtml (qassYear (NonEmpty.head qaForYear))
+        outAppendHtml (select (textToLines yearT))
+        for_ qaForYear $ \qaSession -> do
+          err =<< select (textToLines ("Processing " <> idText (qassId qaSession)))
+          let outputT = qaSessionToHtml qaSession
+          outAppendHtml (select (textToLines outputT))
     -- Write the feed
     give @Target Feed $ do
       for_ optsOutputFeed $ \OutputFile{..} -> do

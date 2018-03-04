@@ -14,6 +14,10 @@ import MarkdownUtil
 data Target = Web | Feed
   deriving (Eq, Show)
 
+qaYearHeaderToHtml :: Integer -> Text
+qaYearHeaderToHtml year = toStrict . renderText $
+  h3_ [class_ "qa-year-header"] (toHtml (show year))
+
 qaSessionToHtml
   :: (Given Target, Given SiteUrl)
   => QaSession Id Person -> Text
@@ -40,7 +44,7 @@ hHeader Id{..} Title{..} day = do
   span_ [class_ "qa-header"] $ do
     span_ [class_ "qa-title"] $ do
       a_ [href_ ("#" <> idText)] (renderMMarkInline titleMMark)
-    let timeString = formatTime defaultTimeLocale "%Y-%m-%d" day
+    let timeString = formatTime defaultTimeLocale "%b %-d" day
     time_ [class_ "qa-time"] (toHtmlRaw timeString)
 
 hConversation

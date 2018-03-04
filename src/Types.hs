@@ -58,8 +58,8 @@ newtype Class =
   deriving (Eq, Ord, Show)
 
 newtype Caption =
-  Caption { captionText :: Text }
-  deriving (Eq, Ord, Show)
+  Caption { captionMMark :: MMark }
+  deriving (Show)
 
 data Thumbnail =
   Thumbnail
@@ -91,7 +91,7 @@ newtype Conversation person =
   deriving (Show)
 
 newtype Title =
-  Title { titleText :: Text }
+  Title { titleMMark :: MMark }
   deriving (Show)
 
 newtype Id =

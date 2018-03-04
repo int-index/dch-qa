@@ -9,9 +9,7 @@ import Data.Time
 import Types
 import Lucid
 import Lucid.Base
-import qualified Text.MMark as MMark (render, useExtensions)
-import Text.MMark.Extension.Skylighting as MMark (skylighting)
-import MarkdownUtil (nowrapExt)
+import MarkdownUtil
 
 data Target = Web | Feed
   deriving (Eq, Show)
@@ -41,7 +39,7 @@ hHeader :: Id -> Title -> Day -> Html ()
 hHeader Id{..} Title{..} day = do
   span_ [class_ "qa-header"] $ do
     span_ [class_ "qa-title"] $ do
-      a_ [href_ ("#" <> idText)] (toHtml titleText)
+      a_ [href_ ("#" <> idText)] (renderMMarkInline titleMMark)
     let timeString = formatTime defaultTimeLocale "%Y-%m-%d" day
     time_ [class_ "qa-time"] (toHtmlRaw timeString)
 
@@ -60,9 +58,7 @@ hConversation Conversation{..} =
       div_ [class_ "qa-content"] $
         F.for_ msgContent $ \ContentPart{..} -> do
           F.for_ contentPartThumbnail hThumbnail
-          MMark.render $
-            MMark.useExtensions [MMark.skylighting, nowrapExt] $
-              contentPartMMark
+          renderMMarkBlock contentPartMMark
 
 hThumbnail ::
   (Given Target, Given SiteUrl) =>
@@ -85,7 +81,7 @@ hThumbnail Thumbnail{..} = do
       Nothing -> img
       Just (Link url) -> a_ [href_ url] img
     F.for_ thumbnailCaption $ \(Caption caption) ->
-      p_ [class_ "qa-thumbnail-caption"] (toHtml caption)
+      p_ [class_ "qa-thumbnail-caption"] (renderMMarkInline caption)
 
 hMessageAuthor
   :: (Given Target, Given SiteUrl)

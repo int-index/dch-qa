@@ -5,10 +5,13 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BS.L
 import Data.Generics.Uniplate.Data
 import Data.Text
+import qualified Data.Text.Lazy as Text.L
 import Data.Time
 import Data.Reflection
 import Types
 import ToHTML (qaSessionToHtml, Target(..))
+import MarkdownUtil (renderMMarkInline)
+import Lucid
 import qualified Text.Atom.Feed        as Atom
 import qualified Text.Atom.Feed.Export as Atom
 import qualified Text.Feed.Types as Feed
@@ -71,5 +74,6 @@ fQaSession session@QaSession{..} =
     entryBase =
       Atom.nullEntry
         (idText qassId)
-        (Atom.TextString (titleText qassTitle))
+        (Atom.HTMLString $ Text.L.toStrict $ Lucid.renderText $
+           renderMMarkInline $ titleMMark qassTitle)
         (pack (Feed.toFeedDateStringUTC Feed.AtomKind fDate))

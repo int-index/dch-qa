@@ -12,7 +12,7 @@ import Data.List.NonEmpty
 import Data.Foldable as Foldable
 import Data.HashMap.Lazy as HashMap
 import System.FilePath
-import Text.MMark as MMark
+import MarkdownUtil (parseMMark)
 import Types
 
 qaSessionFromYaml
@@ -54,7 +54,7 @@ newtype J a = J { getJ :: a }
 
 instance FromJSON (J Title) where
   parseJSON =
-    withText "Title" (return . J . Title)
+    withText "Title" $ fmap (J . Title) . parseMMark
 
 instance FromJSON (J Featured) where
   parseJSON =
@@ -126,10 +126,6 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
           (getJm -> contentPartThumbnail) <- j .:? "thumbnail"
           contentPartMMark <- parseMMark =<< (j .: "content")
           return $ ContentPart{..}
-      parseMMark text =
-        case MMark.parse "" text of
-          Left e -> fail (parseErrorsPretty text e)
-          Right a -> return a
       filterSlashEntities obj = do
         (k, v) <- HashMap.toList obj
         a <-
@@ -164,7 +160,7 @@ instance FromJSON (J Class) where
 
 instance FromJSON (J Caption) where
   parseJSON =
-    withText "Caption" $ return . J . Caption
+    withText "Caption" $ fmap (J . Caption) . parseMMark
 
 instance FromJSON (J Person) where
   parseJSON =

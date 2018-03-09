@@ -11,7 +11,6 @@ import Text.MMark.Extension.Skylighting as MMark
 import Lucid
 import Text.URI
 import Text.URI.QQ (uri)
-import Data.Generics.Uniplate.Data as Uniplate
 
 ----------------------------------------------------------------------------
 -- Main methods
@@ -67,7 +66,7 @@ nowrapExt = MMark.inlineRender $ \old node ->
 -- If there are elements other than paragraphs, you HTML will likely be
 -- broken.
 inlineExt :: MMark.Extension
-inlineExt = MMark.blockTrans $ Uniplate.transform $ \case
+inlineExt = MMark.blockTrans $ \case
   MMark.Paragraph inlines -> MMark.Naked inlines
   other -> other
 
@@ -76,7 +75,7 @@ inlineExt = MMark.blockTrans $ Uniplate.transform $ \case
 -- * To link to a Hackage package, write @[lens](hackage)@.
 --    The result will be monospaced.
 shortcutLinksExt :: MMark.Extension
-shortcutLinksExt = MMark.inlineTrans $ Uniplate.transform $ \case
+shortcutLinksExt = MMark.inlineTrans $ \case
   MMark.Link content link title
     | link == [uri|hackage|]
     , Just pkg <- getPackage content

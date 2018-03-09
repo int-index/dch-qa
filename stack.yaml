@@ -4,10 +4,11 @@ packages:
 - .
 
 extra-deps:
-- mmark-0.0.5.4
-- mmark-ext-0.2.0.0@rev:1
+- mmark-0.0.5.6             # has the inlineTrans fix
+- mmark-ext-0.2.0.0@rev:1   # has the skylighting bump
 - modern-uri-0.2.1.0
 - megaparsec-6.4.0
 - named-0.1.0.0
+# char detection fix
 - "https://github.com/neongreen/skylighting/releases/download/char-fixed/skylighting-core-0.7.0.1.tar.gz"
 - "https://github.com/neongreen/skylighting/releases/download/char-fixed/skylighting-0.7.0.1.tar.gz"

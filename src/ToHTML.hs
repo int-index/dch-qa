@@ -138,10 +138,10 @@ relativeLink url = case given @Target of
 -- | A picture that can be loaded lazily with the @lazyload@ lib.
 lazyImg
   :: Given Target
-  => Text       `Named` "src"
-  -> Maybe Text `Named` "src2x"
+  => "src"   :! Text
+  -> "src2x" :! Maybe Text
   -> Html ()
-lazyImg (Named src) (Named mbSrc2x) = case given @Target of
+lazyImg (arg #src -> src) (arg #src2x -> mbSrc2x) = case given @Target of
   Web -> lazyload >> noscript_ ordinary
   Feed -> ordinary
   where

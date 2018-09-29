@@ -27,8 +27,11 @@ parseMMark text =
     Right a -> a
 
 -- | Render a block of Markdown with our preferred extensions.
-renderMMarkBlock :: Flag "lazyload" -> MMark -> Html ()
-renderMMarkBlock (Flag lazyload) =
+renderMMarkBlock
+  :: "lazyload" :! Bool
+  -> MMark
+  -> Html ()
+renderMMarkBlock (arg #lazyload -> lazyload) =
   MMark.render .
   MMark.useExtensions
     ([lazyloadExt | lazyload] ++ [MMark.skylighting, nowrapExt, shortcutLinksExt])

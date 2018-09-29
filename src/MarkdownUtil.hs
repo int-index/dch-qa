@@ -9,8 +9,9 @@ import Text.MMark as MMark
 import Text.MMark.Extension as MMark
 import Text.MMark.Extension.Skylighting as MMark
 import Lucid
-import Text.URI
+import Text.URI as URI
 import Text.URI.QQ (uri)
+import Named
 
 ----------------------------------------------------------------------------
 -- Main methods
@@ -26,10 +27,14 @@ parseMMark text =
     Right a -> a
 
 -- | Render a block of Markdown with our preferred extensions.
-renderMMarkBlock :: MMark -> Html ()
-renderMMarkBlock =
+renderMMarkBlock
+  :: "lazyload" :! Bool
+  -> MMark
+  -> Html ()
+renderMMarkBlock (arg #lazyload -> lazyload) =
   MMark.render .
-  MMark.useExtensions [MMark.skylighting, nowrapExt, shortcutLinksExt]
+  MMark.useExtensions
+    ([lazyloadExt | lazyload] ++ [MMark.skylighting, nowrapExt, shortcutLinksExt])
 
 -- | Render inline Markdown with our preferred extensions.
 --
@@ -90,3 +95,16 @@ shortcutLinksExt = MMark.inlineTrans $ \case
     hackageLink pkg = do
       pkgUri <- mkURI pkg
       pkgUri `relativeTo` [uri|https://hackage.haskell.org/package/|]
+
+-- | Transform all images to load them lazily (assuming the @lazyload@
+-- library is enabled).
+lazyloadExt :: MMark.Extension
+lazyloadExt = MMark.inlineRender $ \old node ->
+  case node of
+    MMark.Image desc srcUri mtitle ->
+      let title = maybe [] (pure . title_) mtitle
+          src   = URI.render srcUri
+          alt   = asPlainText desc
+      in  img_ (alt_ alt : data_ "src" src : title) >>
+          noscript_ (img_ (alt_ alt : src_ src : title))
+    _ -> old node

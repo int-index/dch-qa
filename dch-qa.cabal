@@ -28,6 +28,7 @@ executable dch-qa
     mmark >=0.0.5,
     mmark-ext >=0.2,
     modern-uri >=0.2,
+    named,
     reflection,
     system-filepath,
     text,
@@ -54,6 +55,9 @@ executable dch-qa
     ViewPatterns,
     TypeApplications,
     TypeFamilies,
+    TypeOperators,
+    DataKinds,
+    OverloadedLabels,
     LambdaCase
   ghc-options:
     -Wall -O2

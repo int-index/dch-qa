@@ -47,14 +47,14 @@ optionsP = do
   optsPeopleFile <- (<|> pure (PeopleFile "people.yaml")) $
     PeopleFile <$>
       optPath "PEOPLE-FILE" 'p' "Path to the file with people descriptions"
-  optsSiteUrl <- (<|> pure (SiteUrl "https://dirtcheaphaskell.io")) $
+  optsSiteUrl <- (<|> pure (SiteUrl "https://monadfix.io")) $
     SiteUrl <$>
       optText "SITE-URL" 'u' "Base URL of the website"
   pure Options{..}
 
 main :: IO ()
 main = sh $ do
-  Options{..} <- options "DCH Q/A page generator" optionsP
+  Options{..} <- options "Monadfix Q/A page generator" optionsP
   give optsSiteUrl $ do
     people <- liftIO $ processPeople (peopleFile optsPeopleFile)
     yamlPaths <-

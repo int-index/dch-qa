@@ -3,11 +3,11 @@
 module MarkdownUtil where
 
 import BasePrelude
-import Data.List.NonEmpty
 import Data.Text as Text
 import Text.MMark as MMark
 import Text.MMark.Extension as MMark
 import Text.MMark.Extension.Skylighting as MMark
+import Text.Megaparsec.Error (errorBundlePretty)
 import Lucid
 import Text.URI as URI
 import Text.URI.QQ (uri)
@@ -23,7 +23,7 @@ import Named
 parseMMark :: Text -> MMark
 parseMMark text =
   case MMark.parse "" text of
-    Left e -> error (MMark.parseErrorsPretty text e)
+    Left e -> error (errorBundlePretty e)
     Right a -> a
 
 -- | Render a block of Markdown with our preferred extensions.

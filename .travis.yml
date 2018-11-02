@@ -1,0 +1,8 @@
+language: nix
+script:
+  - travis_retry nix-shell --pure --command "cabal new-update"
+  - nix-shell --pure --command "bash ./new-install.sh"
+cache:
+  directories:
+    - ~/.cabal
+    - ~/.ghc

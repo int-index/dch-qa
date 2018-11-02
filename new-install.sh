@@ -1,4 +1,4 @@
 set -xe
 
-cabal new-build dch-qa
-cp $(cabal new-exec -- which dch-qa) $HOME/.local/bin
+cabal new-build monadfix-lib-gen
+cp $(cabal new-exec -- which monadfix-lib-gen) $HOME/.local/bin

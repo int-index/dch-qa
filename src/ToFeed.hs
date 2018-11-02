@@ -57,7 +57,7 @@ qaFeed items =
     feedBase =
       Atom.nullFeed
         fUrl
-        (Atom.TextString "Dirt Cheap Haskell: Library")
+        (Atom.TextString "Monadfix Library")
         (pack fLastUpdate)
 
 fQaSession :: Given SiteUrl => QaSession Id Person -> Atom.Entry

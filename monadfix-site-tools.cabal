@@ -1,9 +1,9 @@
-name:                dch-qa
+name:                monadfix-site-tools
 version:             0.1.0.0
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable dch-qa
+executable monadfix-lib-gen
   main-is:
     Main.hs
   other-modules:
@@ -15,7 +15,7 @@ executable dch-qa
     LensUtil
     MarkdownUtil
   build-depends:
-    base >=4.10 && <4.11,
+    base >=4.11 && <4.12,
     base-prelude,
     bytestring,
     containers,
@@ -27,6 +27,7 @@ executable dch-qa
     lucid,
     mmark >=0.0.5,
     mmark-ext >=0.2,
+    megaparsec,
     modern-uri >=0.2,
     named,
     reflection,

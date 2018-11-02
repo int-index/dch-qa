@@ -7,7 +7,6 @@ import Data.ByteString
 import Data.Yaml
 import Data.Map as Map
 import Data.Set as Set
-import Data.Coerce
 import Data.List.NonEmpty
 import Data.Foldable as Foldable
 import Data.HashMap.Lazy as HashMap

@@ -40,7 +40,6 @@ import BasePrelude
 import Control.Lens
 import Data.Text
 import Data.Time
-import Data.List.NonEmpty
 import Data.Map
 import Data.Set
 import Text.MMark

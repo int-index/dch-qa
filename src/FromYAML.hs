@@ -68,12 +68,24 @@ instance FromJSON (J Day) where
         "%Y-%m-%d" -- ISO-8601
         (Text.unpack t)
 
+instance FromJSON (J Dates) where
+  parseJSON = \j -> singleDate j <|> recordOfDates j
+    where
+      singleDate j = do
+        J date <- parseJSON j
+        return $ J (Dates date date)
+      recordOfDates =
+        withObject "Dates" $ \j -> do
+          J dateAnswered <- j .: "answered"
+          J datePublished <- j .: "published"
+          return $ J Dates{..}
+
 instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
   parseJSON =
     withObject "Q/A Session" $ \j -> do
       let qassId = ()
       J qassTitle <- j .: "title"
-      J qassDate <- j .: "date"
+      J qassDates <- j .: "date"
       J qassFeatured <- fromMaybe (J (Featured False)) <$> j .:? "featured"
       J qassConversation <- j .: "conversation"
       return $ J QaSession{..}

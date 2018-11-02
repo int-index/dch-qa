@@ -17,10 +17,13 @@ module Types
     msgHighlightL,
     Conversation(..),
     conversationMessagesL,
+    Dates(..),
+    dateAnsweredL,
+    datePublishedL,
     QaSession(..),
     qassIdL,
     qassTitleL,
-    qassDateL,
+    qassDatesL,
     qassFeaturedL,
     qassConversationL,
     Role(..),
@@ -101,11 +104,18 @@ newtype Featured =
   Featured { featured :: Bool }
   deriving (Eq, Show)
 
+data Dates =
+  Dates
+    { dateAnswered :: !Day,
+      datePublished :: !Day
+    }
+  deriving (Show)
+
 data QaSession id person =
   QaSession
     { qassId :: !id,
       qassTitle :: !Title,
-      qassDate :: !Day,
+      qassDates :: !Dates,
       qassFeatured :: !Featured,
       qassConversation :: !(Conversation person)
     }
@@ -142,6 +152,7 @@ data Person =
 
 type People = Map Nickname Person
 
+makeLensesWith postfixLFields ''Dates
 makeLensesWith postfixLFields ''Message
 makeLensesWith postfixLFields ''Conversation
 makeLensesWith postfixLFields ''QaSession

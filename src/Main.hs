@@ -71,10 +71,10 @@ main = sh $ do
             Just OutputFile{..} -> ( output outputFile,
                                      Turtle.append outputFile )
       outHtml A.empty -- cleans the file if non-empty
-      let qassYear = L.view _1 . toGregorian . qassDate
+      let qassYear = L.view _1 . toGregorian . dateAnswered . qassDates
           groupedQaSessions =
             NonEmpty.groupWith qassYear $
-            P.sortOn (Down . qassDate &&& qassId) qaSessions
+            P.sortOn (Down . dateAnswered . qassDates &&& qassId) qaSessions
       for_ groupedQaSessions $ \qaForYear -> do
         let yearT = qaYearHeaderToHtml (qassYear (NonEmpty.head qaForYear))
         outAppendHtml (select (textToLines yearT))

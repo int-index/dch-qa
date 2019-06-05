@@ -1,4 +1,4 @@
-module FromYAML (qaSessionFromYaml, peopleFromYaml) where
+module FromYAML (qaSessionFromYaml, postFromYaml, peopleFromYaml) where
 
 import BasePrelude
 import Data.Text as Text
@@ -21,6 +21,14 @@ qaSessionFromYaml
 qaSessionFromYaml fp bs = do
   session <- getJ <$> decodeEither' bs
   pure session {qassId = Id (Text.pack (takeBaseName fp))}
+
+postFromYaml
+  :: FilePath
+  -> ByteString
+  -> Either ParseException (Post Id Nickname)
+postFromYaml fp bs = do
+  post <- getJ <$> decodeEither' bs
+  pure post {postId = Id (Text.pack (takeBaseName fp))}
 
 getJs :: [J a] -> [a]
 getJs = coerce
@@ -68,17 +76,17 @@ instance FromJSON (J Day) where
         "%Y-%m-%d" -- ISO-8601
         (Text.unpack t)
 
-instance FromJSON (J Dates) where
+instance FromJSON (J QaDates) where
   parseJSON = \j -> singleDate j <|> recordOfDates j
     where
       singleDate j = do
         J date <- parseJSON j
-        return $ J (Dates date date)
+        return $ J (QaDates date date)
       recordOfDates =
         withObject "Dates" $ \j -> do
-          J dateAnswered <- j .: "answered"
-          J datePublished <- j .: "published"
-          return $ J Dates{..}
+          J qdAnswered <- j .: "answered"
+          J qdPublished <- j .: "published"
+          return $ J QaDates{..}
 
 instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
   parseJSON =
@@ -111,30 +119,18 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
         _ -> fail "multiple slash entities encountered"
     where
       parseContent j =
-        parseContentText j <|>
+        -- Assumes a 'ContentPart' can not be an array
+        parseContentPart j <|>
         parseContentArray j
-      parseContentText j =
-        (\a -> a :| []) <$> parseContentPartText j
+      parseContentPart j =
+        (\a -> a :| []) . getJ <$> parseJSON j
       parseContentArray =
         withArray "Content" $ \contentParts -> do
           contentParts' <-
             case nonEmpty (Foldable.toList contentParts) of
               Nothing -> fail "empty content parts"
               Just a -> return a
-          for contentParts' parseContentPart
-      parseContentPart j =
-        parseContentPartText j <|>
-        parseContentPartObject j
-      parseContentPartText =
-        withText "ContentPart" $ \contentText -> do
-          pure ContentPart
-              { contentPartThumbnail = Nothing,
-                contentPartMMark = parseMMark contentText }
-      parseContentPartObject =
-        withObject "ContentPart" $ \j -> do
-          (getJm -> contentPartThumbnail) <- j .:? "thumbnail"
-          contentPartMMark <- parseMMark <$> (j .: "content")
-          return $ ContentPart{..}
+          getJs1 <$> traverse parseJSON contentParts'
       filterSlashEntities obj = do
         (k, v) <- HashMap.toList obj
         a <-
@@ -142,6 +138,49 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
             Just ('/', a) -> [a]
             _ -> []
         [(a, v)]
+
+instance (id ~ (), p ~ Nickname) => FromJSON (J (Post id p)) where
+  parseJSON =
+    withObject "Post" $ \j -> do
+      let postId = ()
+      J postTitle <- j .: "title"
+      J postDates <- j .: "date"
+      J postAuthor <- j .: "author"
+      J postBody <- j .: "body"
+      return $ J Post{..}
+
+instance FromJSON (J PostDates) where
+  parseJSON = \j -> singleDate j
+    where
+      singleDate j = do
+        J date <- parseJSON j
+        return $ J (PostDates date)
+
+instance FromJSON (J PostBody) where
+  parseJSON =
+    withArray "PostBody" $ \contentParts -> do
+      contentParts' <-
+        case nonEmpty (Foldable.toList contentParts) of
+          Nothing -> fail "empty content parts"
+          Just a -> return a
+      J . PostBody . getJs1 <$> traverse parseJSON contentParts'
+
+instance FromJSON (J ContentPart) where
+  parseJSON j =
+      -- Note: we must not allow arrays as 'ContentPart's
+      parseContentPartText j <|>
+      parseContentPartObject j
+    where
+      parseContentPartText =
+        withText "ContentPart" $ \contentText -> do
+          pure $ J ContentPart
+              { contentPartThumbnail = Nothing,
+                contentPartMMark = parseMMark contentText }
+      parseContentPartObject =
+        withObject "ContentPart" $ \contentObject -> do
+          (getJm -> contentPartThumbnail) <- contentObject .:? "thumbnail"
+          contentPartMMark <- parseMMark <$> (contentObject .: "content")
+          return $ J ContentPart{..}
 
 instance FromJSON (J Thumbnail) where
   parseJSON =

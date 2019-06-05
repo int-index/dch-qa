@@ -45,14 +45,14 @@ qaFeed items =
   where
     SiteUrl siteUrl = given
     sortedItems =
-      sortOn (Down . datePublished . qassDates &&& qassId) items
+      sortOn (Down . qdPublished . qassDates &&& qassId) items
     fUrl = siteUrl <> "#library"
     fLastUpdate =
       case sortedItems of
         item:_ ->
           Feed.toFeedDateStringUTC
             Feed.AtomKind
-            (UTCTime (datePublished (qassDates item)) 0)
+            (UTCTime (qdPublished (qassDates item)) 0)
         _ -> ""
     feedBase =
       Atom.nullFeed
@@ -69,7 +69,7 @@ fQaSession session@QaSession{..} =
   where
     SiteUrl siteUrl = given
     fContent = give @Target Feed $ qaSessionToHtml session
-    fDate = UTCTime (datePublished qassDates) 0
+    fDate = UTCTime (qdPublished qassDates) 0
     fUrl = siteUrl <> "#" <> idText qassId
     entryBase =
       Atom.nullEntry

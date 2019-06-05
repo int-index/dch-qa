@@ -2,30 +2,37 @@
 
 module Types
   ( -- * QA session
-    Title(..),
-    Id(..),
     Featured(..),
     Highlight(..),
-    Side(..),
-    Class(..),
-    Caption(..),
-    Thumbnail(..),
-    ContentPart(..),
     Message(..),
     msgAuthorL,
     msgContentL,
     msgHighlightL,
     Conversation(..),
     conversationMessagesL,
-    Dates(..),
-    dateAnsweredL,
-    datePublishedL,
+    QaDates(..),
+    qdAnsweredL,
+    qdPublishedL,
     QaSession(..),
     qassIdL,
     qassTitleL,
     qassDatesL,
     qassFeaturedL,
     qassConversationL,
+
+    -- * Blog
+    Post(..),
+    PostBody(..),
+    PostDates(..),
+    pdPublishedL,
+
+    -- * Thumbnails
+    Side(..),
+    Class(..),
+    Caption(..),
+    Thumbnail(..),
+
+    -- * Common
     Role(..),
     Name(..),
     Alias(..),
@@ -34,6 +41,9 @@ module Types
     Nickname(..),
     Person(..),
     People,
+    Title(..),
+    Id(..),
+    ContentPart(..),
 
     -- * Misc
     SiteUrl(..)
@@ -49,8 +59,73 @@ import Text.MMark
 
 import LensUtil
 
+----------------------------------------------------------------------------
+-- QA session
+----------------------------------------------------------------------------
+
 newtype Highlight = Highlight Bool
   deriving (Eq, Ord, Show)
+
+data Message person =
+  Message
+    { msgAuthor :: !person,
+      msgContent :: !(NonEmpty ContentPart),
+      msgHighlight :: !Highlight
+    }
+  deriving (Show)
+
+newtype Conversation person =
+  Conversation { conversationMessages :: NonEmpty (Message person) }
+  deriving (Show)
+
+newtype Featured =
+  Featured { featured :: Bool }
+  deriving (Eq, Show)
+
+data QaDates =
+  QaDates
+    { qdAnswered :: !Day,
+      qdPublished :: !Day
+    }
+  deriving (Show)
+
+data QaSession id person =
+  QaSession
+    { qassId :: !id,
+      qassTitle :: !Title,
+      qassDates :: !QaDates,
+      qassFeatured :: !Featured,
+      qassConversation :: !(Conversation person)
+    }
+  deriving (Show)
+
+----------------------------------------------------------------------------
+-- Blog
+----------------------------------------------------------------------------
+
+data Post id person =
+  Post
+    { postId :: !id,
+      postTitle :: !Title,
+      postDates :: !PostDates,
+      postAuthor :: !Person,
+      postBody :: !PostBody
+    }
+  deriving (Show)
+
+data PostBody =
+  PostBody { postBodyPieces :: NonEmpty ContentPart }
+  deriving (Show)
+
+data PostDates =
+  PostDates
+    { pdPublished :: !Day
+    }
+  deriving (Show)
+
+----------------------------------------------------------------------------
+-- Thumbnails
+----------------------------------------------------------------------------
 
 data Side = SideLeft | SideRight
   deriving (Show)
@@ -73,53 +148,22 @@ data Thumbnail =
     }
   deriving (Show)
 
-data ContentPart =
-  ContentPart
-    { contentPartThumbnail :: !(Maybe Thumbnail),
-      contentPartMMark :: !MMark
+----------------------------------------------------------------------------
+-- Common
+----------------------------------------------------------------------------
+
+data Person =
+  Person
+    { pNicks :: ![Nickname],
+      pName :: !Name,
+      pAlias :: !Alias,
+      pPic :: !(Maybe Pic),
+      pLink :: !(Maybe Link),
+      pRole :: !Role
     }
   deriving (Show)
 
-data Message person =
-  Message
-    { msgAuthor :: !person,
-      msgContent :: !(NonEmpty ContentPart),
-      msgHighlight :: !Highlight
-    }
-  deriving (Show)
-
-newtype Conversation person =
-  Conversation { conversationMessages :: NonEmpty (Message person) }
-  deriving (Show)
-
-newtype Title =
-  Title { titleMMark :: MMark }
-  deriving (Show)
-
-newtype Id =
-  Id { idText :: Text }
-  deriving (Eq, Ord, Show)
-
-newtype Featured =
-  Featured { featured :: Bool }
-  deriving (Eq, Show)
-
-data Dates =
-  Dates
-    { dateAnswered :: !Day,
-      datePublished :: !Day
-    }
-  deriving (Show)
-
-data QaSession id person =
-  QaSession
-    { qassId :: !id,
-      qassTitle :: !Title,
-      qassDates :: !Dates,
-      qassFeatured :: !Featured,
-      qassConversation :: !(Conversation person)
-    }
-  deriving (Show)
+type People = Map Nickname Person
 
 data Role = Client | Consultant
   deriving (Show)
@@ -139,23 +183,34 @@ newtype Pic = PicFile Text
 newtype Link = Link Text
   deriving (Eq, Ord, Show)
 
-data Person =
-  Person
-    { pNicks :: ![Nickname],
-      pName :: !Name,
-      pAlias :: !Alias,
-      pPic :: !(Maybe Pic),
-      pLink :: !(Maybe Link),
-      pRole :: !Role
+newtype Title =
+  Title { titleMMark :: MMark }
+  deriving (Show)
+
+newtype Id =
+  Id { idText :: Text }
+  deriving (Eq, Ord, Show)
+
+data ContentPart =
+  ContentPart
+    { contentPartThumbnail :: !(Maybe Thumbnail),
+      contentPartMMark :: !MMark
     }
   deriving (Show)
 
-type People = Map Nickname Person
-
-makeLensesWith postfixLFields ''Dates
-makeLensesWith postfixLFields ''Message
-makeLensesWith postfixLFields ''Conversation
-makeLensesWith postfixLFields ''QaSession
+----------------------------------------------------------------------------
+-- Misc
+----------------------------------------------------------------------------
 
 newtype SiteUrl = SiteUrl Text
   deriving Show
+
+----------------------------------------------------------------------------
+-- Template Haskell
+----------------------------------------------------------------------------
+
+makeLensesWith postfixLFields ''QaDates
+makeLensesWith postfixLFields ''PostDates
+makeLensesWith postfixLFields ''Message
+makeLensesWith postfixLFields ''Conversation
+makeLensesWith postfixLFields ''QaSession

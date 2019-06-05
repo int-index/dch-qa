@@ -35,7 +35,7 @@ hQaSession QaSession{..} = do
         [ "qa-session-featured" | featured ]
   case given @Target of
     Web -> details_ [classes_ classes, id_ idText] $ do
-      summary_ (hHeader qassId qassTitle (dateAnswered qassDates))
+      summary_ (hHeader qassId qassTitle (qdAnswered qassDates))
       hConversation qassConversation
     Feed -> div_ [id_ idText] $
       hConversation qassConversation

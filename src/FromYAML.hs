@@ -58,14 +58,13 @@ peopleFromYaml bs = do
 
 newtype J a = J { getJ :: a }
   deriving (Eq, Ord)
+----------------------------------------------------------------------------
+-- Common instances
+----------------------------------------------------------------------------
 
 instance FromJSON (J Title) where
   parseJSON =
     withText "Title" $ pure . J . Title . parseMMark
-
-instance FromJSON (J Featured) where
-  parseJSON =
-    withBool "Featured" (return . J . Featured)
 
 instance FromJSON (J Day) where
   parseJSON =
@@ -75,95 +74,6 @@ instance FromJSON (J Day) where
         defaultTimeLocale
         "%Y-%m-%d" -- ISO-8601
         (Text.unpack t)
-
-instance FromJSON (J QaDates) where
-  parseJSON = \j -> singleDate j <|> recordOfDates j
-    where
-      singleDate j = do
-        J date <- parseJSON j
-        return $ J (QaDates date date)
-      recordOfDates =
-        withObject "Dates" $ \j -> do
-          J qdAnswered <- j .: "answered"
-          J qdPublished <- j .: "published"
-          return $ J QaDates{..}
-
-instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
-  parseJSON =
-    withObject "Q/A Session" $ \j -> do
-      let qassId = ()
-      J qassTitle <- j .: "title"
-      J qassDates <- j .: "date"
-      J qassFeatured <- fromMaybe (J (Featured False)) <$> j .:? "featured"
-      J qassConversation <- j .: "conversation"
-      return $ J QaSession{..}
-
-instance p ~ Nickname => FromJSON (J (Conversation p)) where
-  parseJSON =
-    withArray "Conversation" $ \j -> do
-      case nonEmpty (Foldable.toList j) of
-        Nothing -> fail "empty"
-        Just js -> J . Conversation . getJs1 <$> traverse parseJSON js
-
-instance p ~ Nickname => FromJSON (J (Message p)) where
-  parseJSON =
-    withObject "Message" $ \j -> do
-      (Highlight . fromMaybe False -> msgHighlight) <-
-        j .:? "highlight"
-      case filterSlashEntities j of
-        [(k, v)] -> do
-          let msgAuthor = Nickname k
-          msgContent <- parseContent v
-          return $ J Message{..}
-        [] -> fail "no author and content specified for a message"
-        _ -> fail "multiple slash entities encountered"
-    where
-      parseContent j =
-        -- Assumes a 'ContentPart' can not be an array
-        parseContentPart j <|>
-        parseContentArray j
-      parseContentPart j =
-        (\a -> a :| []) . getJ <$> parseJSON j
-      parseContentArray =
-        withArray "Content" $ \contentParts -> do
-          contentParts' <-
-            case nonEmpty (Foldable.toList contentParts) of
-              Nothing -> fail "empty content parts"
-              Just a -> return a
-          getJs1 <$> traverse parseJSON contentParts'
-      filterSlashEntities obj = do
-        (k, v) <- HashMap.toList obj
-        a <-
-          case Text.uncons k of
-            Just ('/', a) -> [a]
-            _ -> []
-        [(a, v)]
-
-instance (id ~ (), p ~ Nickname) => FromJSON (J (Post id p)) where
-  parseJSON =
-    withObject "Post" $ \j -> do
-      let postId = ()
-      J postTitle <- j .: "title"
-      J postDates <- j .: "date"
-      J postAuthor <- j .: "author"
-      J postBody <- j .: "body"
-      return $ J Post{..}
-
-instance FromJSON (J PostDates) where
-  parseJSON = \j -> singleDate j
-    where
-      singleDate j = do
-        J date <- parseJSON j
-        return $ J (PostDates date)
-
-instance FromJSON (J PostBody) where
-  parseJSON =
-    withArray "PostBody" $ \contentParts -> do
-      contentParts' <-
-        case nonEmpty (Foldable.toList contentParts) of
-          Nothing -> fail "empty content parts"
-          Just a -> return a
-      J . PostBody . getJs1 <$> traverse parseJSON contentParts'
 
 instance FromJSON (J ContentPart) where
   parseJSON j =
@@ -248,3 +158,104 @@ instance FromJSON (J Role) where
         "client" -> return Client
         "consultant" -> return Consultant
         _ -> fail "Unknown role"
+
+----------------------------------------------------------------------------
+-- QA session instances
+----------------------------------------------------------------------------
+
+instance FromJSON (J Featured) where
+  parseJSON =
+    withBool "Featured" (return . J . Featured)
+
+instance FromJSON (J QaDates) where
+  parseJSON = \j -> singleDate j <|> recordOfDates j
+    where
+      singleDate j = do
+        J date <- parseJSON j
+        return $ J (QaDates date date)
+      recordOfDates =
+        withObject "Dates" $ \j -> do
+          J qdAnswered <- j .: "answered"
+          J qdPublished <- j .: "published"
+          return $ J QaDates{..}
+
+instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
+  parseJSON =
+    withObject "Q/A Session" $ \j -> do
+      let qassId = ()
+      J qassTitle <- j .: "title"
+      J qassDates <- j .: "date"
+      J qassFeatured <- fromMaybe (J (Featured False)) <$> j .:? "featured"
+      J qassConversation <- j .: "conversation"
+      return $ J QaSession{..}
+
+instance p ~ Nickname => FromJSON (J (Conversation p)) where
+  parseJSON =
+    withArray "Conversation" $ \j -> do
+      case nonEmpty (Foldable.toList j) of
+        Nothing -> fail "empty"
+        Just js -> J . Conversation . getJs1 <$> traverse parseJSON js
+
+instance p ~ Nickname => FromJSON (J (Message p)) where
+  parseJSON =
+    withObject "Message" $ \j -> do
+      (Highlight . fromMaybe False -> msgHighlight) <-
+        j .:? "highlight"
+      case filterSlashEntities j of
+        [(k, v)] -> do
+          let msgAuthor = Nickname k
+          msgContent <- parseContent v
+          return $ J Message{..}
+        [] -> fail "no author and content specified for a message"
+        _ -> fail "multiple slash entities encountered"
+    where
+      parseContent j =
+        -- Assumes a 'ContentPart' can not be an array
+        parseContentPart j <|>
+        parseContentArray j
+      parseContentPart j =
+        (\a -> a :| []) . getJ <$> parseJSON j
+      parseContentArray =
+        withArray "Content" $ \contentParts -> do
+          contentParts' <-
+            case nonEmpty (Foldable.toList contentParts) of
+              Nothing -> fail "empty content parts"
+              Just a -> return a
+          getJs1 <$> traverse parseJSON contentParts'
+      filterSlashEntities obj = do
+        (k, v) <- HashMap.toList obj
+        a <-
+          case Text.uncons k of
+            Just ('/', a) -> [a]
+            _ -> []
+        [(a, v)]
+
+----------------------------------------------------------------------------
+-- Post instances
+----------------------------------------------------------------------------
+
+instance (id ~ (), p ~ Nickname) => FromJSON (J (Post id p)) where
+  parseJSON =
+    withObject "Post" $ \j -> do
+      let postId = ()
+      J postTitle <- j .: "title"
+      J postDates <- j .: "date"
+      J postAuthor <- j .: "author"
+      J postBody <- j .: "body"
+      return $ J Post{..}
+
+instance FromJSON (J PostDates) where
+  parseJSON = \j -> singleDate j
+    where
+      singleDate j = do
+        J date <- parseJSON j
+        return $ J (PostDates date)
+
+instance FromJSON (J PostBody) where
+  parseJSON =
+    withArray "PostBody" $ \contentParts -> do
+      contentParts' <-
+        case nonEmpty (Foldable.toList contentParts) of
+          Nothing -> fail "empty content parts"
+          Just a -> return a
+      J . PostBody . getJs1 <$> traverse parseJSON contentParts'

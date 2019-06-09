@@ -122,17 +122,6 @@ instance FromJSON (j :: J) Caption where
   parseJSON =
     withText "Caption" $ pure . Caption . parseMMark
 
-instance FromJSON (j :: J) Person where
-  parseJSON =
-    withObject "Person" $ \j -> do
-      pNicks <- j .: "nicks"
-      pName <- j .: "name"
-      pAlias <- j .: "alias"
-      pPic <- j .:? "pic"
-      pLink <- j .:? "link"
-      pRole <- j .: "role"
-      return $ Person{..}
-
 instance FromJSON (j :: J) Nickname where
   parseJSON =
     withText "Nickname" $ return . Nickname
@@ -261,6 +250,21 @@ instance FromJSON JPost PostBody where
           Nothing -> fail "empty content parts"
           Just a -> return a
       PostBody <$> traverse parseJSON contentParts'
+
+----------------------------------------------------------------------------
+-- People instances
+----------------------------------------------------------------------------
+
+instance FromJSON JPeople Person where
+  parseJSON =
+    withObject "Person" $ \j -> do
+      pNicks <- j .: "nicks"
+      pName <- j .: "name"
+      pAlias <- j .: "alias"
+      pPic <- j .:? "pic"
+      pLink <- j .:? "link"
+      pRole <- j .: "role"
+      return $ Person{..}
 
 ----------------------------------------------------------------------------
 -- Standard types

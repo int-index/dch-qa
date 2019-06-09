@@ -108,7 +108,7 @@ data Post id person =
     { postId :: !id,
       postTitle :: !Title,
       postDates :: !PostDates,
-      postAuthor :: !Person,
+      postAuthor :: !person,
       postBody :: !PostBody
     }
   deriving (Show)

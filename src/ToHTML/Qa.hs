@@ -1,4 +1,4 @@
-module ToHTML where
+module ToHTML.Qa where
 
 import BasePrelude
 import Data.Foldable as F (for_)
@@ -8,12 +8,8 @@ import Data.Text.Lazy (toStrict)
 import Data.Time
 import Types
 import Lucid
-import Lucid.Base
 import MarkdownUtil
-import Named
-
-data Target = Web | Feed
-  deriving (Eq, Show)
+import ToHTML.Common
 
 qaYearHeaderToHtml :: Integer -> Text
 qaYearHeaderToHtml year = toStrict . renderText $
@@ -68,28 +64,6 @@ hConversation Conversation{..} =
                 Feed -> False
           renderMMarkBlock (#lazyload lazyload) contentPartMMark
 
-hThumbnail ::
-  (Given Target, Given SiteUrl) =>
-  Thumbnail ->
-  Html ()
-hThumbnail Thumbnail{..} = do
-  let
-    PicFile picFile = thumbnailPic
-    inDir path = "thumbnails/" <> path
-    sideClass =
-      case thumbnailSide of
-        SideLeft -> "qa-thumbnail-left"
-        SideRight -> "qa-thumbnail-right"
-    otherClasses = ["qa-thumbnail-" <> c | Class c <- toList thumbnailClass]
-  div_ [classes_ ("qa-thumbnail" : sideClass : otherClasses)] $ do
-    let img = lazyImg (#src   (relativeLink (inDir picFile)))
-                      (#src2x (Just (relativeLink (inDir ("2x_" <> picFile)))))
-    case thumbnailLink of
-      Nothing -> img
-      Just (Link url) -> a_ [href_ url] img
-    F.for_ thumbnailCaption $ \(Caption caption) ->
-      p_ [class_ "qa-thumbnail-caption"] (renderMMarkInline caption)
-
 hMessageAuthor
   :: (Given Target, Given SiteUrl)
   => Person -> Html ()
@@ -127,35 +101,3 @@ highlightClass :: Highlight -> Text
 highlightClass = \case
   Highlight True -> "qa-msg-highlight"
   Highlight False -> "qa-msg-casual"
-
-relativeLink :: (Given Target, Given SiteUrl) => Text -> Text
-relativeLink url = case given @Target of
-  Web -> url
-  Feed -> siteUrl <> "/" <> url  -- for feeds, we want the link to be absolute
-  where
-    SiteUrl siteUrl = given
-
--- | A picture that can be loaded lazily with the @lazyload@ lib.
-lazyImg
-  :: Given Target
-  => "src"   :! Text
-  -> "src2x" :! Maybe Text
-  -> Html ()
-lazyImg (arg #src -> src) (arg #src2x -> mbSrc2x) = case given @Target of
-  Web -> lazyload >> noscript_ ordinary
-  Feed -> ordinary
-  where
-    ordinary = img_ $
-      src_ src :
-      [srcset_ (src2x <> " 2x") | Just src2x <- [mbSrc2x]]
-    lazyload = img_ $
-      data_ "src" src :
-      [data_ "srcset" (src2x <> " 2x") | Just src2x <- [mbSrc2x]]
-
-----------------------------------------------------------------------------
--- Utilities
-----------------------------------------------------------------------------
-
--- | The @src@ attribute.
-srcset_ :: Text -> Attribute
-srcset_ = makeAttribute "srcset"

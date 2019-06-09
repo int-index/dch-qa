@@ -1,4 +1,4 @@
-module ToFeed where
+module ToFeed.Qa where
 
 import BasePrelude
 import qualified Data.ByteString as BS
@@ -9,7 +9,8 @@ import qualified Data.Text.Lazy as Text.L
 import Data.Time
 import Data.Reflection
 import Types
-import ToHTML (qaSessionToHtml, Target(..))
+import ToHTML.Common (Target(..))
+import ToHTML.Qa (qaSessionToHtml)
 import MarkdownUtil (renderMMarkInline)
 import Lucid
 import qualified Text.Atom.Feed        as Atom

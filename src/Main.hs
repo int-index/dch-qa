@@ -15,8 +15,9 @@ import qualified Turtle.Bytes as Bytes
 import qualified Control.Foldl as Fold
 
 import FromYAML
-import ToHTML
-import ToFeed
+import ToHTML.Qa
+import ToHTML.Common
+import ToFeed.Qa
 import Types
 import ResolvePeople
 
@@ -71,10 +72,10 @@ main = sh $ do
             Just OutputFile{..} -> ( output outputFile,
                                      Turtle.append outputFile )
       outHtml A.empty -- cleans the file if non-empty
-      let qassYear = L.view _1 . toGregorian . dateAnswered . qassDates
+      let qassYear = L.view _1 . toGregorian . qdAnswered . qassDates
           groupedQaSessions =
             NonEmpty.groupWith qassYear $
-            P.sortOn (Down . dateAnswered . qassDates &&& qassId) qaSessions
+            P.sortOn (Down . qdAnswered . qassDates &&& qassId) qaSessions
       for_ groupedQaSessions $ \qaForYear -> do
         let yearT = qaYearHeaderToHtml (qassYear (NonEmpty.head qaForYear))
         outAppendHtml (select (textToLines yearT))

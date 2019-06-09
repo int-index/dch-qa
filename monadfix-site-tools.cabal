@@ -9,8 +9,9 @@ executable monadfix-lib-gen
   other-modules:
     Types
     FromYAML
-    ToHTML
-    ToFeed
+    ToHTML.Qa
+    ToHTML.Common
+    ToFeed.Qa
     ResolvePeople
     LensUtil
     MarkdownUtil

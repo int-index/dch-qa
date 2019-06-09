@@ -10,8 +10,10 @@ executable monadfix-gen
     Types
     FromYAML
     ToHTML.Qa
+    ToHTML.Blog
     ToHTML.Common
     ToFeed.Qa
+    ToFeed.Blog
     ResolvePeople
     LensUtil
     MarkdownUtil

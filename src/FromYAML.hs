@@ -1,10 +1,16 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds #-}
+
+{-# OPTIONS -Wno-unticked-promoted-constructors #-}
+
 module FromYAML (qaSessionFromYaml, postFromYaml, peopleFromYaml) where
 
 import BasePrelude
 import Data.Text as Text
 import Data.Time
 import Data.ByteString
-import Data.Yaml
+import Data.Yaml (ParseException, decodeEither')
+import Data.Aeson.Tagged
 import Data.Map as Map
 import Data.Set as Set
 import Data.List.NonEmpty
@@ -14,12 +20,22 @@ import System.FilePath
 import MarkdownUtil (parseMMark)
 import Types
 
+----------------------------------------------------------------------------
+-- JSON tags
+----------------------------------------------------------------------------
+
+data J = JPost | JQa | JPeople
+
+----------------------------------------------------------------------------
+-- FromYAML
+----------------------------------------------------------------------------
+
 qaSessionFromYaml
   :: FilePath
   -> ByteString
   -> Either ParseException (QaSession Id Nickname)
 qaSessionFromYaml fp bs = do
-  session <- getJ <$> decodeEither' bs
+  session <- fromTaggedAeson @JQa <$> decodeEither' bs
   pure session {qassId = Id (Text.pack (takeBaseName fp))}
 
 postFromYaml
@@ -27,24 +43,12 @@ postFromYaml
   -> ByteString
   -> Either ParseException (Post Id Nickname)
 postFromYaml fp bs = do
-  post <- getJ <$> decodeEither' bs
+  post <- fromTaggedAeson @JPost <$> decodeEither' bs
   pure post {postId = Id (Text.pack (takeBaseName fp))}
-
-getJs :: [J a] -> [a]
-getJs = coerce
-
-getJm :: Maybe (J a) -> Maybe a
-getJm = coerce
-
-getJs1 :: NonEmpty (J a) -> NonEmpty a
-getJs1 = coerce
-
-getJset :: Ord a => Set (J a) -> Set a
-getJset = Set.map getJ
 
 peopleFromYaml :: ByteString -> Either ParseException People
 peopleFromYaml bs = do
-  (getJs -> personList) <- decodeEither' bs
+  personList <- fromTaggedAeson @JPeople <$> decodeEither' bs
   case buildPeople personList of
     Just a -> return a
     Nothing -> fail "Duplicate nicknames"
@@ -56,26 +60,24 @@ peopleFromYaml bs = do
         nick <- pNicks person
         [(nick, Just person)]
 
-newtype J a = J { getJ :: a }
-  deriving (Eq, Ord)
 ----------------------------------------------------------------------------
 -- Common instances
 ----------------------------------------------------------------------------
 
-instance FromJSON (J Title) where
+instance FromJSON (j :: J) Title where
   parseJSON =
-    withText "Title" $ pure . J . Title . parseMMark
+    withText "Title" $ pure . Title . parseMMark
 
-instance FromJSON (J Day) where
+instance FromJSON (j :: J) Day where
   parseJSON =
     withText "Date" $ \t ->
-      J <$> parseTimeM
+      parseTimeM
         True -- Accept leading and trailing whitespace
         defaultTimeLocale
         "%Y-%m-%d" -- ISO-8601
         (Text.unpack t)
 
-instance FromJSON (J ContentPart) where
+instance FromJSON (j :: J) ContentPart where
   parseJSON j =
       -- Note: we must not allow arrays as 'ContentPart's
       parseContentPartText j <|>
@@ -83,78 +85,78 @@ instance FromJSON (J ContentPart) where
     where
       parseContentPartText =
         withText "ContentPart" $ \contentText -> do
-          pure $ J ContentPart
+          pure $ ContentPart
               { contentPartThumbnail = Nothing,
                 contentPartMMark = parseMMark contentText }
       parseContentPartObject =
         withObject "ContentPart" $ \contentObject -> do
-          (getJm -> contentPartThumbnail) <- contentObject .:? "thumbnail"
-          contentPartMMark <- parseMMark <$> (contentObject .: "content")
-          return $ J ContentPart{..}
+          contentPartThumbnail <- contentObject .:? "thumbnail"
+          contentPartMMark <- parseMMark <$> contentObject .: "content"
+          return $ ContentPart{..}
 
-instance FromJSON (J Thumbnail) where
+instance FromJSON (j :: J) Thumbnail where
   parseJSON =
     withObject "Thumbnail" $ \j -> do
-      J thumbnailSide <- j .: "side"
-      J thumbnailPic <- j .: "pic"
-      (getJm -> thumbnailLink) <- j .:? "link"
+      thumbnailSide <- j .: "side"
+      thumbnailPic <- j .: "pic"
+      thumbnailLink <- j .:? "link"
       thumbnailClass <- fmap (fromMaybe mempty) $ optional $
-        fmap getJset (j .: "class") <|>
-        fmap (Set.singleton . getJ) (j .: "class")
-      (getJm -> thumbnailCaption) <- j .:? "caption"
-      return $ J Thumbnail{..}
+        j .: "class" <|>
+        fmap Set.singleton (j .: "class")
+      thumbnailCaption <- j .:? "caption"
+      return $ Thumbnail{..}
 
-instance FromJSON (J Side) where
+instance FromJSON (j :: J) Side where
   parseJSON =
     withText "Side" $ \t ->
-      J <$> case t of
+      case t of
         "left" -> return SideLeft
         "right" -> return SideRight
         _ -> fail "Unknown side"
 
-instance FromJSON (J Class) where
+instance FromJSON (j :: J) Class where
   parseJSON =
-    withText "Class" $ return . J . Class
+    withText "Class" $ pure . Class
 
-instance FromJSON (J Caption) where
+instance FromJSON (j :: J) Caption where
   parseJSON =
-    withText "Caption" $ pure . J . Caption . parseMMark
+    withText "Caption" $ pure . Caption . parseMMark
 
-instance FromJSON (J Person) where
+instance FromJSON (j :: J) Person where
   parseJSON =
     withObject "Person" $ \j -> do
-      (getJs -> pNicks) <- j .: "nicks"
-      J pName <- j .: "name"
-      J pAlias <- j .: "alias"
-      (getJm -> pPic) <- j .:? "pic"
-      (getJm -> pLink) <- j .:? "link"
-      J pRole <- j .: "role"
-      return $ J Person{..}
+      pNicks <- j .: "nicks"
+      pName <- j .: "name"
+      pAlias <- j .: "alias"
+      pPic <- j .:? "pic"
+      pLink <- j .:? "link"
+      pRole <- j .: "role"
+      return $ Person{..}
 
-instance FromJSON (J Nickname) where
+instance FromJSON (j :: J) Nickname where
   parseJSON =
-    withText "Nickname" $ return . J . Nickname
+    withText "Nickname" $ return . Nickname
 
-instance FromJSON (J Name) where
+instance FromJSON (j :: J) Name where
   parseJSON =
-    withText "Name" $ return . J . Name
+    withText "Name" $ return . Name
 
-instance FromJSON (J Alias) where
+instance FromJSON (j :: J) Alias where
   parseJSON =
-    withText "Alias" $ return . J . Alias
+    withText "Alias" $ return . Alias
 
-instance FromJSON (J Pic) where
+instance FromJSON (j :: J) Pic where
   parseJSON =
-    withText "Pic" $ return . J . PicFile
+    withText "Pic" $ return . PicFile
 
-instance FromJSON (J Link) where
+instance FromJSON (j :: J) Link where
   parseJSON =
-    withText "Link" $ return . J . Link
+    withText "Link" $ return . Link
 
-instance FromJSON (J Role) where
+instance FromJSON (j :: J) Role where
   parseJSON =
     withText "Role" $ \t ->
-      J <$> case t of
+      case t of
         "client" -> return Client
         "consultant" -> return Consultant
         _ -> fail "Unknown role"
@@ -163,40 +165,40 @@ instance FromJSON (J Role) where
 -- QA session instances
 ----------------------------------------------------------------------------
 
-instance FromJSON (J Featured) where
+instance FromJSON JQa Featured where
   parseJSON =
-    withBool "Featured" (return . J . Featured)
+    withBool "Featured" (return . Featured)
 
-instance FromJSON (J QaDates) where
+instance FromJSON JQa QaDates where
   parseJSON = \j -> singleDate j <|> recordOfDates j
     where
       singleDate j = do
-        J date <- parseJSON j
-        return $ J (QaDates date date)
+        date <- parseJSON j
+        return $ QaDates date date
       recordOfDates =
         withObject "Dates" $ \j -> do
-          J qdAnswered <- j .: "answered"
-          J qdPublished <- j .: "published"
-          return $ J QaDates{..}
+          qdAnswered <- j .: "answered"
+          qdPublished <- j .: "published"
+          return $ QaDates{..}
 
-instance (id ~ (), p ~ Nickname) => FromJSON (J (QaSession id p)) where
+instance (id ~ (), p ~ Nickname) => FromJSON JQa (QaSession id p) where
   parseJSON =
     withObject "Q/A Session" $ \j -> do
       let qassId = ()
-      J qassTitle <- j .: "title"
-      J qassDates <- j .: "date"
-      J qassFeatured <- fromMaybe (J (Featured False)) <$> j .:? "featured"
-      J qassConversation <- j .: "conversation"
-      return $ J QaSession{..}
+      qassTitle <- j .: "title"
+      qassDates <- j .: "date"
+      qassFeatured <- fromMaybe (Featured False) <$> j .:? "featured"
+      qassConversation <- j .: "conversation"
+      return $ QaSession{..}
 
-instance p ~ Nickname => FromJSON (J (Conversation p)) where
+instance p ~ Nickname => FromJSON JQa (Conversation p) where
   parseJSON =
     withArray "Conversation" $ \j -> do
       case nonEmpty (Foldable.toList j) of
         Nothing -> fail "empty"
-        Just js -> J . Conversation . getJs1 <$> traverse parseJSON js
+        Just js -> Conversation <$> traverse parseJSON js
 
-instance p ~ Nickname => FromJSON (J (Message p)) where
+instance p ~ Nickname => FromJSON JQa (Message p) where
   parseJSON =
     withObject "Message" $ \j -> do
       (Highlight . fromMaybe False -> msgHighlight) <-
@@ -205,7 +207,7 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
         [(k, v)] -> do
           let msgAuthor = Nickname k
           msgContent <- parseContent v
-          return $ J Message{..}
+          return $ Message{..}
         [] -> fail "no author and content specified for a message"
         _ -> fail "multiple slash entities encountered"
     where
@@ -214,14 +216,14 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
         parseContentPart j <|>
         parseContentArray j
       parseContentPart j =
-        (\a -> a :| []) . getJ <$> parseJSON j
+        (\a -> a :| []) <$> parseJSON @JQa j
       parseContentArray =
         withArray "Content" $ \contentParts -> do
           contentParts' <-
             case nonEmpty (Foldable.toList contentParts) of
               Nothing -> fail "empty content parts"
               Just a -> return a
-          getJs1 <$> traverse parseJSON contentParts'
+          traverse parseJSON contentParts'
       filterSlashEntities obj = do
         (k, v) <- HashMap.toList obj
         a <-
@@ -234,28 +236,46 @@ instance p ~ Nickname => FromJSON (J (Message p)) where
 -- Post instances
 ----------------------------------------------------------------------------
 
-instance (id ~ (), p ~ Nickname) => FromJSON (J (Post id p)) where
+instance (id ~ (), p ~ Nickname) => FromJSON JPost (Post id p) where
   parseJSON =
     withObject "Post" $ \j -> do
       let postId = ()
-      J postTitle <- j .: "title"
-      J postDates <- j .: "date"
-      J postAuthor <- j .: "author"
-      J postBody <- j .: "body"
-      return $ J Post{..}
+      postTitle <- j .: "title"
+      postDates <- j .: "date"
+      postAuthor <- j .: "author"
+      postBody <- j .: "body"
+      return $ Post{..}
 
-instance FromJSON (J PostDates) where
+instance FromJSON JPost PostDates where
   parseJSON = \j -> singleDate j
     where
       singleDate j = do
-        J date <- parseJSON j
-        return $ J (PostDates date)
+        date <- parseJSON j
+        return $ PostDates date
 
-instance FromJSON (J PostBody) where
+instance FromJSON JPost PostBody where
   parseJSON =
     withArray "PostBody" $ \contentParts -> do
       contentParts' <-
         case nonEmpty (Foldable.toList contentParts) of
           Nothing -> fail "empty content parts"
           Just a -> return a
-      J . PostBody . getJs1 <$> traverse parseJSON contentParts'
+      PostBody <$> traverse parseJSON contentParts'
+
+----------------------------------------------------------------------------
+-- Standard types
+----------------------------------------------------------------------------
+
+-- TODO: all of these are bad
+
+instance FromJSON j a => FromJSON (j :: J) [a] where
+  parseJSON = parseJSONList
+
+instance (Ord a, FromJSON j a) => FromJSON (j :: J) (Set a) where
+  parseJSON = fmap Set.fromList . parseJSON
+
+instance FromJSON (j :: J) Text where
+  parseJSON = retag @Aeson @j . parseJSON @Aeson
+
+instance FromJSON (j :: J) Bool where
+  parseJSON = retag @Aeson @j . parseJSON @Aeson

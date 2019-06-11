@@ -47,7 +47,7 @@ data Command =
     }
 
 generateQaP :: Parser Command
-generateQaP = do
+generateQaP = subcommand "qa" "Generate Q&A" $ do
   optsInputDir <-
     InputDir <$>
       argPath "INPUT-YAML-DIR" "The directory with Q/A yaml files"
@@ -66,7 +66,7 @@ generateQaP = do
   pure GenerateQa{..}
 
 generateBlogP :: Parser Command
-generateBlogP = do
+generateBlogP = subcommand "blog" "Generate blog" $ do
   optsInputDir <-
     InputDir <$>
       argPath "INPUT-YAML-DIR" "The directory with post yaml files"

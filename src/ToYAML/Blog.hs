@@ -1,9 +1,8 @@
 module ToYAML.Blog where
 
 import BasePrelude as P
-import Data.Aeson
+import Data.Yaml
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BS.L
 import Data.Reflection
 import Data.Time
 import Types
@@ -16,7 +15,7 @@ blogIndexToYaml
   :: (Given Target, Given SiteUrl)
   => [Post Id Person] -> BS.ByteString
 blogIndexToYaml posts =
-  BS.L.toStrict $ encode $
+  encode $
   object
     [ "posts" .= P.map yPost posts
     ]
@@ -24,7 +23,7 @@ blogIndexToYaml posts =
 postToYaml
   :: (Given Target, Given SiteUrl)
   => Post Id Person -> BS.ByteString
-postToYaml = BS.L.toStrict . encode . yPost
+postToYaml = encode . yPost
 
 yPost
   :: (Given Target, Given SiteUrl)

@@ -3,9 +3,8 @@ module ToYAML.Qa where
 import BasePrelude as P
 import Control.Lens as L hiding ((.=))
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BS.L
 import Data.List.NonEmpty as NonEmpty
-import Data.Aeson
+import Data.Yaml
 import Data.Reflection
 import Data.Time
 import Types
@@ -24,7 +23,7 @@ qaSessionsToYaml qaSessions =
         "sessions" .= NonEmpty.map yQaSession sessions
       ]
   in
-    BS.L.toStrict $ encode $
+    encode $
     object
       [ "by_year" .= P.map groupToYaml groupedQaSessions
       ]

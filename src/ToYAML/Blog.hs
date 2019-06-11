@@ -15,9 +15,9 @@ blogIndexToYaml
   :: (Given Target, Given SiteUrl)
   => [Post Id Person] -> BS.ByteString
 blogIndexToYaml posts =
-  encode $
-  object
-    [ "posts" .= P.map yPost posts
+  encode $ object
+    [ "blog" .= object
+      [ "posts" .= P.map yPost posts ]
     ]
 
 postToYaml

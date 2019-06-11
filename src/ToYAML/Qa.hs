@@ -23,9 +23,9 @@ qaSessionsToYaml qaSessions =
         "sessions" .= NonEmpty.map yQaSession sessions
       ]
   in
-    encode $
-    object
-      [ "by_year" .= P.map groupToYaml groupedQaSessions
+    encode $ object
+      [ "library" .= object
+          [ "by_year" .= P.map groupToYaml groupedQaSessions ]
       ]
   where
     qassYear = L.view _1 . toGregorian . qdAnswered . qassDates

@@ -22,6 +22,11 @@ module Types
 
     -- * Blog
     Post(..),
+    postAuthorL,
+    postBodyL,
+    postDatesL,
+    postIdL,
+    postTitleL,
     PostBody(..),
     PostDates(..),
     pdPublishedL,
@@ -214,3 +219,4 @@ makeLensesWith postfixLFields ''PostDates
 makeLensesWith postfixLFields ''Message
 makeLensesWith postfixLFields ''Conversation
 makeLensesWith postfixLFields ''QaSession
+makeLensesWith postfixLFields ''Post

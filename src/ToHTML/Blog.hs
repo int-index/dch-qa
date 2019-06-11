@@ -28,14 +28,12 @@ hPost Post{..} = do
     Feed -> pure ()
   p_ [class_ "post-meta"] $ do
     hPostAuthor postAuthor
-    let timeString = formatTime defaultTimeLocale "%b %-d" pdPublished
     case given @Target of
       Web -> do
+        let timeString = formatTime defaultTimeLocale "%b %-d" pdPublished
         span_ [class_ "post-published"] $
           "Published on " <> time_ (toHtmlRaw timeString)
-      Feed -> do
-        br_ []
-        em_ $ "Published on " <> time_ (toHtmlRaw timeString)
+      Feed -> pure ()
   div_ [class_ "post-body"] $
     hPostBody postBody
 

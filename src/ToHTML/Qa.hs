@@ -4,45 +4,10 @@ import BasePrelude
 import Data.Foldable as F (for_)
 import Data.Reflection
 import Data.Text
-import Data.Text.Lazy (toStrict)
-import Data.Time
 import Types
 import Lucid
 import MarkdownUtil
 import ToHTML.Common
-
-qaYearHeaderToHtml :: Integer -> Text
-qaYearHeaderToHtml year = toStrict . renderText $
-  h3_ [class_ "qa-year-header"] (toHtml (show year))
-
-qaSessionToHtml
-  :: (Given Target, Given SiteUrl)
-  => QaSession Id Person -> Text
-qaSessionToHtml = toStrict . renderText . hQaSession
-
-hQaSession
-  :: (Given Target, Given SiteUrl)
-  => QaSession Id Person -> Html ()
-hQaSession QaSession{..} = do
-  let Id{..} = qassId
-      Featured{..} = qassFeatured
-      classes =
-        [ "qa-session" ] <>
-        [ "qa-session-featured" | featured ]
-  case given @Target of
-    Web -> details_ [classes_ classes, id_ idText] $ do
-      summary_ (hHeader qassId qassTitle (qdAnswered qassDates))
-      hConversation qassConversation
-    Feed -> div_ [id_ idText] $
-      hConversation qassConversation
-
-hHeader :: Id -> Title -> Day -> Html ()
-hHeader Id{..} Title{..} day = do
-  span_ [class_ "qa-header"] $ do
-    span_ [class_ "qa-title"] $ do
-      a_ [href_ ("#" <> idText)] (renderMMarkInline titleMMark)
-    let timeString = formatTime defaultTimeLocale "%b %-d" day
-    time_ [class_ "qa-time"] (toHtmlRaw timeString)
 
 hConversation
   :: (Given Target, Given SiteUrl)
@@ -83,9 +48,15 @@ hAuthorPic
   => Pic -> Html ()
 hAuthorPic (PicFile picFile) = do
   let inDir path = "userpics/" <> path
-  img_ [ class_ "qa-userpic",
-         src_ (relativeLink (inDir picFile)),
-         srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+  case given @Target of
+    Web ->
+      img_ [ class_ "qa-userpic",
+             src_ (relativeLink (inDir picFile)),
+             srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+    Feed ->
+      img_ [ class_ "qa-userpic",
+             src_ (relativeLink (inDir ("2x_" <> picFile))),
+             width_ "20px" ]
 
 hAuthorLink :: Maybe Link -> Html () -> Html ()
 hAuthorLink = \case

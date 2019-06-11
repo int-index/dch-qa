@@ -10,7 +10,7 @@ import Data.Time
 import Data.Reflection
 import Types
 import ToHTML.Common (Target(..))
-import ToHTML.Qa (qaSessionToHtml)
+import ToHTML.Qa
 import MarkdownUtil (renderMMarkInline)
 import Lucid
 import qualified Text.Atom.Feed        as Atom
@@ -62,14 +62,15 @@ qaFeed items =
         (pack fLastUpdate)
 
 fQaSession :: Given SiteUrl => QaSession Id Person -> Atom.Entry
-fQaSession session@QaSession{..} =
+fQaSession QaSession{..} =
   entryBase
     { Atom.entryLinks = [Atom.nullLink fUrl],
       Atom.entryContent = Just (Atom.HTMLContent fContent)
     }
   where
     SiteUrl siteUrl = given
-    fContent = give @Target Feed $ qaSessionToHtml session
+    fContent = give @Target Feed $ Text.L.toStrict $ Lucid.renderText $
+      div_ [id_ (idText qassId)] $ hConversation qassConversation
     fDate = UTCTime (qdPublished qassDates) 0
     fUrl = siteUrl <> "#" <> idText qassId
     entryBase =

@@ -75,7 +75,7 @@ generateBlogP = subcommand "blog" "Generate blog" $ do
       argPath "OUTPUT-YAML-DIR" "The directory for the resulting rendered files"
   optsOutputIndex <-
     OutputFile <$>
-      argPath "OUTPUT-INDEX-FILE" "The directory for the resulting blog index file"
+      argPath "OUTPUT-INDEX-FILE" "The filepath for the resulting blog index file"
   optsOutputFeed <- optional $
     OutputFile <$>
       optPath "OUTPUT-FEED-FILE" 'f' "The filepath for the resulting feed file"

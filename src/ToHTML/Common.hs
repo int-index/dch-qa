@@ -1,6 +1,7 @@
 module ToHTML.Common where
 
 import BasePrelude
+import System.FilePath.Posix ((</>))
 import Data.Foldable as F (for_)
 import Data.Reflection
 import Data.Text
@@ -20,25 +21,25 @@ hThumbnail ::
 hThumbnail Thumbnail{..} = do
   let
     PicFile picFile = thumbnailPic
-    inDir path = "thumbnails/" <> path
+    inDir path = "/thumbnails/" <> path
     sideClass =
       case thumbnailSide of
-        SideLeft -> "qa-thumbnail-left"
-        SideRight -> "qa-thumbnail-right"
-    otherClasses = ["qa-thumbnail-" <> c | Class c <- toList thumbnailClass]
-  div_ [classes_ ("qa-thumbnail" : sideClass : otherClasses)] $ do
+        SideLeft -> "thumbnail-left"
+        SideRight -> "thumbnail-right"
+    otherClasses = ["thumbnail-" <> c | Class c <- toList thumbnailClass]
+  div_ [classes_ ("thumbnail" : sideClass : otherClasses)] $ do
     let img = lazyImg (#src   (relativeLink (inDir picFile)))
                       (#src2x (Just (relativeLink (inDir ("2x_" <> picFile)))))
     case thumbnailLink of
       Nothing -> img
       Just (Link url) -> a_ [href_ url] img
     F.for_ thumbnailCaption $ \(Caption caption) ->
-      p_ [class_ "qa-thumbnail-caption"] (renderMMarkInline caption)
+      p_ [class_ "thumbnail-caption"] (renderMMarkInline caption)
 
 relativeLink :: (Given Target, Given SiteUrl) => Text -> Text
 relativeLink url = case given @Target of
   Web -> url
-  Feed -> siteUrl <> "/" <> url  -- for feeds, we want the link to be absolute
+  Feed -> pack (unpack siteUrl </> unpack url) -- for feeds, we want the link to be absolute
   where
     SiteUrl siteUrl = given
 

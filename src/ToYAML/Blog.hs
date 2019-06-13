@@ -32,7 +32,10 @@ yPost Post{..} =
   object
     [ "id" .= idText postId,
       "title" .= Lucid.renderText (renderMMarkInline (titleMMark postTitle)),
-      "published" .= formatTime defaultTimeLocale "%b %-d" (pdPublished postDates),
+      "published" .= object
+        [ "short" .= formatTime defaultTimeLocale "%b %-d" (pdPublished postDates),
+          "full"  .= formatTime defaultTimeLocale "%B %-d, %Y" (pdPublished postDates)
+        ],
       "author" .= yPerson postAuthor,
       "body" .= Lucid.renderText (hPostBody postBody)
     ]
@@ -48,7 +51,7 @@ yPerson Person{..} =
     [ Just ("name" .= name),
       Just ("alias" .= alias),
       pPic <&> \(PicFile pic) ->
-        "pic" .= relativeLink ("userpics/" <> pic),
+        "pic" .= relativeLink ("/userpics/" <> pic),
       pLink <&> \(Link link) ->
         "link" .= link
     ]

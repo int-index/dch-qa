@@ -47,15 +47,14 @@ hAuthorPic
   :: (Given Target, Given SiteUrl)
   => Pic -> Html ()
 hAuthorPic (PicFile picFile) = do
-  let inDir path = "userpics/" <> path
+  let inDir path = "/userpics/" <> path
   case given @Target of
     Web ->
       img_ [ class_ "qa-userpic",
-             src_ (relativeLink (inDir picFile)),
-             srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+             src_ (relativeLink (inDir picFile)) ]
     Feed ->
       img_ [ class_ "qa-userpic",
-             src_ (relativeLink (inDir ("2x_" <> picFile))),
+             src_ (relativeLink (inDir picFile)),
              width_ "20px" ]
 
 hAuthorLink :: Maybe Link -> Html () -> Html ()

@@ -16,6 +16,7 @@ postToHtml
   => Post Id Person -> Text
 postToHtml = toStrict . renderText . hPost
 
+-- TODO get rid of
 hPost
   :: (Given Target, Given SiteUrl)
   => Post Id Person -> Html ()
@@ -66,10 +67,15 @@ hAuthorPic
   :: (Given Target, Given SiteUrl)
   => Pic -> Html ()
 hAuthorPic (PicFile picFile) = do
-  let inDir path = "userpics/" <> path
-  img_ [ class_ "post-userpic",
-         src_ (relativeLink (inDir picFile)),
-         srcset_ (relativeLink (inDir ("2x_" <> picFile)) <> " 2x") ]
+  let inDir path = "/userpics/" <> path
+  case given @Target of
+    Web ->
+      img_ [ class_ "post-userpic",
+             src_ (relativeLink (inDir picFile)) ]
+    Feed ->
+      img_ [ class_ "post-userpic",
+             src_ (relativeLink (inDir picFile)),
+             width_ "20px" ]
 
 hAuthorLink :: Maybe Link -> Html () -> Html ()
 hAuthorLink = \case

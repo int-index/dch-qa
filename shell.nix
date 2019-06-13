@@ -4,7 +4,7 @@ with import <nixpkgs> { };
 stdenv.mkDerivation rec {
   name = "monadfix-site-tools";
   buildInputs = [
-    haskell.compiler.ghc843
+    haskell.compiler.ghc865
     pkgs.git
     pkgs.zlib
     pkgs.cabal-install

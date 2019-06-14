@@ -1,6 +1,6 @@
 language: nix
 script:
-  - travis_retry nix-shell --pure --command "cabal new-update"
+  - travis_retry nix-shell --command "cabal new-update"
   - nix-shell --command "bash ./new-install.sh"  # --pure breaks SSL
 cache:
   directories:

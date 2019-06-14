@@ -3,14 +3,19 @@ version:             0.1.0.0
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable monadfix-lib-gen
+executable monadfix-gen
   main-is:
     Main.hs
   other-modules:
     Types
     FromYAML
-    ToHTML
-    ToFeed
+    ToHTML.Qa
+    ToHTML.Blog
+    ToHTML.Common
+    ToFeed.Qa
+    ToFeed.Blog
+    ToYAML.Qa
+    ToYAML.Blog
     ResolvePeople
     LensUtil
     MarkdownUtil
@@ -32,6 +37,7 @@ executable monadfix-lib-gen
     named,
     reflection,
     system-filepath,
+    tagged-aeson,
     text,
     time,
     turtle,

@@ -1,4 +1,4 @@
 set -xe
 
-cabal new-build monadfix-lib-gen
-cp $(cabal new-exec -- which monadfix-lib-gen) $HOME/.local/bin
+cabal new-build monadfix-gen
+cp $(cabal new-exec -- which monadfix-gen) $HOME/.local/bin

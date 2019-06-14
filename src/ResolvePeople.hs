@@ -12,12 +12,20 @@ instance Exception PersonNotFound where
   displayException (PersonNotFound (Nickname t)) =
     "Could not find a person with nickname " ++ show t
 
-resolvePeople ::
+resolvePeopleQa ::
   People ->
   QaSession id Nickname ->
   Either PersonNotFound (QaSession id Person)
-resolvePeople people =
+resolvePeopleQa people =
   (qassConversationL . conversationMessagesL . traverse . msgAuthorL)
+    (resolvePerson people)
+
+resolvePeoplePost ::
+  People ->
+  Post id Nickname ->
+  Either PersonNotFound (Post id Person)
+resolvePeoplePost people =
+  postAuthorL
     (resolvePerson people)
 
 resolvePerson ::

@@ -1,4 +1,4 @@
-module ToFeed where
+module ToFeed.Qa where
 
 import BasePrelude
 import qualified Data.ByteString as BS
@@ -9,7 +9,8 @@ import qualified Data.Text.Lazy as Text.L
 import Data.Time
 import Data.Reflection
 import Types
-import ToHTML (qaSessionToHtml, Target(..))
+import ToHTML.Common (Target(..))
+import ToHTML.Qa
 import MarkdownUtil (renderMMarkInline)
 import Lucid
 import qualified Text.Atom.Feed        as Atom
@@ -45,14 +46,14 @@ qaFeed items =
   where
     SiteUrl siteUrl = given
     sortedItems =
-      sortOn (Down . datePublished . qassDates &&& qassId) items
+      sortOn (Down . qdPublished . qassDates &&& qassId) items
     fUrl = siteUrl <> "#library"
     fLastUpdate =
       case sortedItems of
         item:_ ->
           Feed.toFeedDateStringUTC
             Feed.AtomKind
-            (UTCTime (datePublished (qassDates item)) 0)
+            (UTCTime (qdPublished (qassDates item)) 0)
         _ -> ""
     feedBase =
       Atom.nullFeed
@@ -61,15 +62,16 @@ qaFeed items =
         (pack fLastUpdate)
 
 fQaSession :: Given SiteUrl => QaSession Id Person -> Atom.Entry
-fQaSession session@QaSession{..} =
+fQaSession QaSession{..} =
   entryBase
     { Atom.entryLinks = [Atom.nullLink fUrl],
       Atom.entryContent = Just (Atom.HTMLContent fContent)
     }
   where
     SiteUrl siteUrl = given
-    fContent = give @Target Feed $ qaSessionToHtml session
-    fDate = UTCTime (datePublished qassDates) 0
+    fContent = give @Target Feed $ Text.L.toStrict $ Lucid.renderText $
+      div_ [id_ (idText qassId)] $ hConversation qassConversation
+    fDate = UTCTime (qdPublished qassDates) 0
     fUrl = siteUrl <> "#" <> idText qassId
     entryBase =
       Atom.nullEntry

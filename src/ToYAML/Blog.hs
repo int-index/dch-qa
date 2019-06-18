@@ -1,57 +1,81 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module ToYAML.Blog where
 
 import BasePrelude as P
-import Data.Yaml
+import Data.Yaml (encode)
+import Data.Aeson.Tagged
 import qualified Data.ByteString as BS
 import Data.Reflection
 import Data.Time
+import Data.Text
+import qualified Data.Text.Lazy as Text.L
 import Types
 import Lucid
 import MarkdownUtil
 import ToHTML.Common
 import ToHTML.Blog
 
+data JBlog
+
 blogIndexToYaml
   :: (Given Target, Given SiteUrl)
   => [Post Id Person] -> BS.ByteString
 blogIndexToYaml posts =
-  encode $ object
-    [ "blog" .= object
-      [ "posts" .= P.map yPost posts ]
+  -- TODO this is also kinda bad
+  encode $ object @JBlog
+    [ "blog" .= object @JBlog
+      [ "posts" .= posts ]
     ]
 
 postToYaml
   :: (Given Target, Given SiteUrl)
   => Post Id Person -> BS.ByteString
-postToYaml = encode . yPost
+postToYaml = encode . TaggedAeson @JBlog
 
-yPost
-  :: (Given Target, Given SiteUrl)
-  => Post Id Person -> Value
-yPost Post{..} =
-  object
-    [ "id" .= idText postId,
-      "title" .= Lucid.renderText (renderMMarkInline (titleMMark postTitle)),
-      "published" .= object
-        [ "short" .= formatTime defaultTimeLocale "%b %-d" (pdPublished postDates),
-          "full"  .= formatTime defaultTimeLocale "%B %-d, %Y" (pdPublished postDates)
-        ],
-      "author" .= yPerson postAuthor,
-      "body" .= Lucid.renderText (hPostBody postBody)
-    ]
+instance (Given Target, Given SiteUrl) => ToJSON JBlog (Post Id Person) where
+  toJSON Post{..} =
+    object
+      [ "id" .= idText postId,
+        "title" .= Lucid.renderText (renderMMarkInline (titleMMark postTitle)),
+        "published" .= object @JBlog
+          [ "short" .= formatTime defaultTimeLocale "%b %-d" (pdPublished postDates),
+            "full"  .= formatTime defaultTimeLocale "%B %-d, %Y" (pdPublished postDates)
+          ],
+        "author" .= postAuthor,
+        "body" .= Lucid.renderText (hPostBody postBody)
+      ]
 
-yPerson
-  :: (Given Target, Given SiteUrl)
-  => Person -> Value
-yPerson Person{..} =
-  let Name name = pName
-      Alias alias = pAlias
-  in
-  object $ catMaybes
-    [ Just ("name" .= name),
-      Just ("alias" .= alias),
-      pPic <&> \(PicFile pic) ->
-        "pic" .= relativeLink ("/userpics/" <> pic),
-      pLink <&> \(Link link) ->
-        "link" .= link
-    ]
+instance (Given Target, Given SiteUrl) => ToJSON JBlog Person where
+  toJSON Person{..} =
+    let Name name = pName
+        Alias alias = pAlias
+    in
+    object $ catMaybes
+      [ Just ("name" .= name),
+        Just ("alias" .= alias),
+        pPic <&> \(PicFile pic) ->
+          "pic" .= relativeLink ("/userpics/" <> pic),
+        pLink <&> \(Link link) ->
+          "link" .= link
+      ]
+
+----------------------------------------------------------------------------
+-- Common instances
+----------------------------------------------------------------------------
+
+instance ToJSON JBlog Text where
+    toJSON = retag @Aeson @JBlog . toJSON @Aeson
+
+instance ToJSON JBlog Text.L.Text where
+    toJSON = retag @Aeson @JBlog . toJSON @Aeson
+
+instance ToJSON JBlog Char where
+    -- TODO: nobody should ever have to write this
+    toJSON = retag @Aeson @JBlog . toJSON @Aeson
+    toJSONList = retag @Aeson @JBlog . toJSONList @Aeson
+    toEncoding = retag @Aeson @JBlog . toEncoding @Aeson
+    toEncodingList = retag @Aeson @JBlog . toEncodingList @Aeson
+
+instance ToJSON JBlog a => ToJSON JBlog [a] where
+    toJSON = toJSONList

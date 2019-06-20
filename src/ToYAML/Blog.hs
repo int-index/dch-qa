@@ -65,17 +65,17 @@ instance (Given Target, Given SiteUrl) => ToJSON JBlog Person where
 ----------------------------------------------------------------------------
 
 instance ToJSON JBlog Text where
-    toJSON = retag @Aeson @JBlog . toJSON @Aeson
+    toJSON = using @Aeson toJSON
 
 instance ToJSON JBlog Text.L.Text where
-    toJSON = retag @Aeson @JBlog . toJSON @Aeson
+    toJSON = using @Aeson toJSON
 
 instance ToJSON JBlog Char where
     -- TODO: nobody should ever have to write this
-    toJSON = retag @Aeson @JBlog . toJSON @Aeson
-    toJSONList = retag @Aeson @JBlog . toJSONList @Aeson
-    toEncoding = retag @Aeson @JBlog . toEncoding @Aeson
-    toEncodingList = retag @Aeson @JBlog . toEncodingList @Aeson
+    toJSON = using @Aeson toJSON
+    toJSONList = using @Aeson toJSONList
+    toEncoding = using @Aeson toEncoding
+    toEncodingList = using @Aeson toEncodingList
 
 instance ToJSON JBlog a => ToJSON JBlog [a] where
     toJSON = toJSONList

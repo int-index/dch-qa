@@ -270,16 +270,16 @@ instance FromJSON JPeople Person where
 -- Standard types
 ----------------------------------------------------------------------------
 
--- TODO: all of these are bad
+instance FromJSON (j :: J) Text where
+  parseJSON = using @Aeson parseJSON
+
+instance FromJSON (j :: J) Bool where
+  parseJSON = using @Aeson parseJSON
+
+-- TODO: these two are bad
 
 instance FromJSON j a => FromJSON (j :: J) [a] where
   parseJSON = parseJSONList
 
 instance (Ord a, FromJSON j a) => FromJSON (j :: J) (Set a) where
   parseJSON = fmap Set.fromList . parseJSON
-
-instance FromJSON (j :: J) Text where
-  parseJSON = retag @Aeson @j . parseJSON @Aeson
-
-instance FromJSON (j :: J) Bool where
-  parseJSON = retag @Aeson @j . parseJSON @Aeson

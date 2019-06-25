@@ -8,9 +8,8 @@ import Data.Text
 import qualified Data.Text.Lazy as Text.L
 import Data.Time
 import Data.Reflection
-import System.FilePath.Posix ((</>))
 import Types
-import ToHTML.Common (Target(..))
+import ToHTML.Common (Target(..), (<//>))
 import ToHTML.Blog (postToHtml)
 import MarkdownUtil (renderMMarkInline)
 import Lucid
@@ -48,7 +47,7 @@ blogFeed items =
     SiteUrl siteUrl = given
     sortedItems =
       sortOn (Down . pdPublished . postDates &&& postId) items
-    fUrl = pack (unpack siteUrl </> "blog")
+    fUrl = siteUrl <//> "blog"
     fLastUpdate =
       case sortedItems of
         item:_ ->
@@ -72,7 +71,7 @@ fPost post@Post{..} =
     SiteUrl siteUrl = given
     fContent = give @Target Feed $ postToHtml post
     fDate = UTCTime (pdPublished postDates) 0
-    fUrl = pack (unpack siteUrl </> "blog" </> unpack (idText postId))
+    fUrl = siteUrl <//> "blog" <//> idText postId
     entryBase =
       Atom.nullEntry
         (idText postId)

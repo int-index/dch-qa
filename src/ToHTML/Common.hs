@@ -1,10 +1,9 @@
 module ToHTML.Common where
 
 import BasePrelude
-import System.FilePath.Posix ((</>))
 import Data.Foldable as F (for_)
 import Data.Reflection
-import Data.Text
+import Data.Text as Text
 import Types
 import Lucid
 import Lucid.Base
@@ -39,7 +38,7 @@ hThumbnail Thumbnail{..} = do
 relativeLink :: (Given Target, Given SiteUrl) => Text -> Text
 relativeLink url = case given @Target of
   Web -> url
-  Feed -> pack (unpack siteUrl </> unpack url) -- for feeds, we want the link to be absolute
+  Feed -> siteUrl <//> url  -- for feeds, we want the link to be absolute
   where
     SiteUrl siteUrl = given
 
@@ -63,3 +62,7 @@ lazyImg (arg #src -> src) (arg #src2x -> mbSrc2x) = case given @Target of
 -- | The @src@ attribute.
 srcset_ :: Text -> Attribute
 srcset_ = makeAttribute "srcset"
+
+-- | Combine two paths, adding/removing slashes where necessary.
+(<//>) :: Text -> Text -> Text
+(<//>) a b = Text.dropWhileEnd (== '/') a <> "/" <> Text.dropWhile (== '/') b

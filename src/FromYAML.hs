@@ -276,10 +276,8 @@ instance FromJSON (j :: J) Text where
 instance FromJSON (j :: J) Bool where
   parseJSON = using @Aeson parseJSON
 
--- TODO: these two are bad
-
 instance FromJSON j a => FromJSON (j :: J) [a] where
-  parseJSON = parseJSONList
+  parseJSON = parseList
 
 instance (Ord a, FromJSON j a) => FromJSON (j :: J) (Set a) where
-  parseJSON = fmap Set.fromList . parseJSON
+  parseJSON = parseSet

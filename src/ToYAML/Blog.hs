@@ -78,4 +78,4 @@ instance ToJSON JBlog Char where
     toEncodingList = using @Aeson toEncodingList
 
 instance ToJSON JBlog a => ToJSON JBlog [a] where
-    toJSON = toJSONList
+    toJSON = listToJSON

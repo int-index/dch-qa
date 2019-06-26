@@ -60,7 +60,7 @@ generateQaP = subcommand "qa" "Generate Q&A" $ do
   optsPeopleFile <- (<|> pure (PeopleFile "people.yaml")) $
     PeopleFile <$>
       optPath "PEOPLE-FILE" 'p' "Path to the file with people descriptions"
-  optsSiteUrl <- (<|> pure (SiteUrl "https://monadfix.io")) $
+  optsSiteUrl <- (<|> pure (SiteUrl "https://monadfix.com")) $
     SiteUrl <$>
       optText "SITE-URL" 'u' "Base URL of the website"
   pure GenerateQa{..}
@@ -82,7 +82,7 @@ generateBlogP = subcommand "blog" "Generate blog" $ do
   optsPeopleFile <- (<|> pure (PeopleFile "people.yaml")) $
     PeopleFile <$>
       optPath "PEOPLE-FILE" 'p' "Path to the file with people descriptions"
-  optsSiteUrl <- (<|> pure (SiteUrl "https://monadfix.io")) $
+  optsSiteUrl <- (<|> pure (SiteUrl "https://monadfix.com")) $
     SiteUrl <$>
       optText "SITE-URL" 'u' "Base URL of the website"
   pure GenerateBlog{..}

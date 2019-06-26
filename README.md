@@ -1,3 +1,3 @@
 # monadfix/site-tools
 
-Custom tools that power https://monadfix.io
+Custom tools that power https://monadfix.com

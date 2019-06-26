@@ -3,4 +3,4 @@ packages: *.cabal
 source-repository-package
     type: git
     location: https://github.com/monadfix/tagged-aeson
-    tag: e078f1849f62cd90599c446575aaa69f88a71a3d
+    tag: 96c6b090afa43a228666e7349dd250782475ea81

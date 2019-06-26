@@ -1,3 +1,5 @@
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds #-}
 
@@ -270,14 +272,11 @@ instance FromJSON JPeople Person where
 -- Standard types
 ----------------------------------------------------------------------------
 
-instance FromJSON (j :: J) Text where
-  parseJSON = using @Aeson parseJSON
+deriving via WithAeson Text instance FromJSON (j :: J) Text
+deriving via WithAeson Bool instance FromJSON (j :: J) Bool
 
-instance FromJSON (j :: J) Bool where
-  parseJSON = using @Aeson parseJSON
+deriving via WithAeson1 [] a
+  instance FromJSON j a => FromJSON (j :: J) [a]
 
-instance FromJSON j a => FromJSON (j :: J) [a] where
-  parseJSON = parseList
-
-instance (Ord a, FromJSON j a) => FromJSON (j :: J) (Set a) where
-  parseJSON = parseSet
+deriving via WithAeson1 Set a
+  instance (Ord a, FromJSON j a) => FromJSON (j :: J) (Set a)

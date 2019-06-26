@@ -1,3 +1,5 @@
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module ToYAML.Blog where
@@ -64,18 +66,7 @@ instance (Given Target, Given SiteUrl) => ToJSON JBlog Person where
 -- Common instances
 ----------------------------------------------------------------------------
 
-instance ToJSON JBlog Text where
-    toJSON = using @Aeson toJSON
-
-instance ToJSON JBlog Text.L.Text where
-    toJSON = using @Aeson toJSON
-
-instance ToJSON JBlog Char where
-    -- TODO: nobody should ever have to write this
-    toJSON = using @Aeson toJSON
-    toJSONList = using @Aeson toJSONList
-    toEncoding = using @Aeson toEncoding
-    toEncodingList = using @Aeson toEncodingList
-
-instance ToJSON JBlog a => ToJSON JBlog [a] where
-    toJSON = listToJSON
+deriving via WithAeson Text instance ToJSON JBlog Text
+deriving via WithAeson Text.L.Text instance ToJSON JBlog Text.L.Text
+deriving via WithAeson Char instance ToJSON JBlog Char
+deriving via WithAeson1 [] a instance ToJSON JBlog a => ToJSON JBlog [a]
